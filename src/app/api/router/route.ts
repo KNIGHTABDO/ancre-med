@@ -1,0 +1,303 @@
+import { NextRequest, NextResponse } from "next/server";
+import { execFile } from "child_process";
+import { promisify } from "util";
+import path from "path";
+import { GoogleGenAI, Type } from "@google/genai";
+
+const execFilePromise = promisify(execFile);
+
+function getRequiredEnv(key: string): string {
+  const value = process.env[key];
+  if (typeof value !== "string" || value.trim().length === 0) {
+    throw new Error(`Missing required environment variable: ${key}`);
+  }
+  return value.trim();
+}
+
+const routingSchema = {
+  type: Type.OBJECT,
+  properties: {
+    is_conversational: {
+      type: Type.BOOLEAN,
+      description: "True if the query is a simple greeting, thank you, goodbye, or non-medical chat (e.g. 'hi', 'bonjour', 'merci', 'ok bye'). False if it is an actual medical question, case analysis, or requires clinical/pharmacological facts."
+    },
+    search_query: {
+      type: Type.STRING,
+      description: "A reformulated and expanded search query in French optimized for keyword search (FTS5 / database). Translate/expand abbreviations, add clinical synonyms, or include relevant medical concepts. Keep empty if is_conversational is True."
+    }
+  },
+  required: ["is_conversational", "search_query"]
+};
+
+const ROUTING_INSTRUCTION = `
+You are the routing and search optimization agent for a medical RAG application.
+Your task is to analyze the user's message and decide:
+1. If this is a casual greeting, conversational message, or generic chat (e.g., "bonjour", "merci", "salut", "ok bye", "hello", etc.) that does not need a database/API search. Set is_conversational to true.
+2. If this is a medical query, case analysis, drug question, or anything requiring factual medical knowledge. Set is_conversational to false.
+3. If is_conversational is false, write an optimized search_query in French. You must reformulate the user's query to maximize keyword search hits in a database (e.g., if they ask 'Qu'est-ce que le tirzépatide ?', reformulate to 'tirzepatide indications posologie avis'). Include key medical terms, synonyms, and variations of the condition or drug name.
+`.trim();
+
+const SADIQ_AGENTS = [
+  {
+    id: "agent_a_semiologie",
+    label: "Agent A (Sémiologie)",
+    silo: "colles_enseignants_edn",
+  },
+  {
+    id: "agent_b_pharmacologie",
+    label: "Agent B (Pharmacologie)",
+    silo: "ansm_bdpm_vidal",
+  },
+  {
+    id: "agent_c_anatomie",
+    label: "Agent C (Anatomie)",
+    silo: "has_recommandations",
+  },
+] as const;
+
+type SadiqAgent = (typeof SADIQ_AGENTS)[number];
+type CategorySilo = SadiqAgent["silo"];
+
+interface RouterRequestBody {
+  prompt: string;
+}
+
+interface RankedCandidate {
+  id: string;
+  agent_id: SadiqAgent["id"];
+  agent_label: SadiqAgent["label"] | string;
+  text: string;
+  source_identifier: string | null;
+  source: string | null;
+  page: number | null;
+  date: string | null;
+  silo: CategorySilo;
+  qdrant_score: number;
+  cosine_similarity: number;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function parsePromptBody(value: unknown): RouterRequestBody {
+  if (!isRecord(value)) {
+    throw new Error("Request body must be a JSON object.");
+  }
+
+  const prompt = value["prompt"];
+  if (typeof prompt !== "string" || prompt.trim().length === 0) {
+    throw new Error("Request body must include a non-empty text 'prompt' parameter.");
+  }
+
+  return { prompt: prompt.trim() };
+}
+
+async function runLocalSearch(prompt: string): Promise<any[]> {
+  const scriptPath = path.join(process.cwd(), "search_worker.py");
+  try {
+    const { stdout } = await execFilePromise("py", ["-3", scriptPath, prompt]);
+    return JSON.parse(stdout);
+  } catch (error: any) {
+    console.error("Local search execution failed, trying fallback command 'python':", error);
+    try {
+      const { stdout } = await execFilePromise("python", [scriptPath, prompt]);
+      return JSON.parse(stdout);
+    } catch (fallbackError) {
+      console.error("Fallback search command also failed:", fallbackError);
+      return [];
+    }
+  }
+}
+
+async function fetchWikipediaSummary(query: string): Promise<any | null> {
+  try {
+    const searchUrl = `https://fr.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`;
+    const searchResponse = await fetch(searchUrl, { signal: AbortSignal.timeout(3000) });
+    if (!searchResponse.ok) return null;
+    
+    const searchJson = await searchResponse.json();
+    const firstHit = searchJson?.query?.search?.[0];
+    if (!firstHit) return null;
+    
+    const title = firstHit.title;
+    
+    const summaryUrl = `https://fr.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
+    const summaryResponse = await fetch(summaryUrl, { signal: AbortSignal.timeout(3000) });
+    if (!summaryResponse.ok) return null;
+    
+    const summaryJson = await summaryResponse.json();
+    if (!summaryJson.extract) return null;
+    
+    return {
+      id: `wiki_${summaryJson.pageid || Math.random().toString(36).substr(2, 9)}`,
+      agent_id: "agent_a_semiologie",
+      agent_label: "Encyclopédie Wikipedia",
+      text: `[Source: Encyclopédie Wikipedia - Sujet: ${title}] ${summaryJson.extract}`,
+      source_identifier: summaryJson.content_urls?.desktop?.page || `https://fr.wikipedia.org/wiki/${encodeURIComponent(title)}`,
+      source: `Wikipedia - ${title}`,
+      page: null,
+      date: null,
+      silo: "colles_enseignants_edn",
+      qdrant_score: 1.0,
+      cosine_similarity: 1.0
+    };
+  } catch (error) {
+    console.warn("Wikipedia fetch failed:", error);
+    return null;
+  }
+}
+
+async function fetchApiMedicaments(query: string): Promise<any | null> {
+  try {
+    const searchUrl = `https://api-medicaments.fr/api/v1/medicaments?query=${encodeURIComponent(query)}`;
+    const searchResponse = await fetch(searchUrl, { signal: AbortSignal.timeout(3000) });
+    if (!searchResponse.ok) return null;
+    
+    const drugs = await searchResponse.json();
+    if (!Array.isArray(drugs) || drugs.length === 0) return null;
+    
+    const firstDrug = drugs[0];
+    const codeCIS = firstDrug.codeCIS;
+    
+    const detailUrl = `https://api-medicaments.fr/api/v1/medicaments/${codeCIS}`;
+    const detailResponse = await fetch(detailUrl, { signal: AbortSignal.timeout(3000) });
+    if (!detailResponse.ok) return null;
+    
+    const details = await detailResponse.json();
+    if (!details) return null;
+    
+    const denom = details.denomination || firstDrug.denomination;
+    const composition = details.substancesActivees ? details.substancesActivees.map((s: any) => `${s.denominationSubstance} (${s.dosageSubstance})`).join(", ") : "Non spécifiée";
+    const condition = details.conditionsPrescriptionDelivrance ? details.conditionsPrescriptionDelivrance.join(" | ") : "Non spécifiées";
+    
+    return {
+      id: `drug_${codeCIS}`,
+      agent_id: "agent_b_pharmacologie",
+      agent_label: "Base Nationale des Médicaments (Live API)",
+      text: `[Source: api-medicaments.fr] Médicament: ${denom} (CIS: ${codeCIS}). Substances actives: ${composition}. Conditions de prescription: ${condition}`,
+      source_identifier: `https://base-donnees-publique.medicaments.gouv.fr/affichageDoc.php?specid=${codeCIS}&typedoc=R`,
+      source: `api-medicaments.fr - ${denom}`,
+      page: null,
+      date: null,
+      silo: "ansm_bdpm_vidal",
+      qdrant_score: 1.0,
+      cosine_similarity: 1.0
+    };
+  } catch (error) {
+    console.warn("api-medicaments fetch failed:", error);
+    return null;
+  }
+}
+
+export async function POST(request: NextRequest): Promise<NextResponse> {
+  let body: RouterRequestBody;
+  try {
+    body = parsePromptBody(await request.json());
+  } catch (error: unknown) {
+    return NextResponse.json({ success: false, error: String(error) }, { status: 400 });
+  }
+
+  try {
+    const apiKey = getRequiredEnv("GEMINI_API_KEY");
+    const aiStudio = new GoogleGenAI({ apiKey });
+
+    // Call Gemini to classify query and reformulate it
+    const routingResponse = await aiStudio.models.generateContent({
+      model: "gemini-3.1-flash-lite",
+      contents: body.prompt,
+      config: {
+        systemInstruction: ROUTING_INSTRUCTION,
+        responseMimeType: "application/json",
+        responseSchema: routingSchema,
+        temperature: 0.0,
+      }
+    });
+
+    const routingData = JSON.parse(routingResponse.text || "{}");
+
+    // If query is conversational, bypass searches and return a system-direct response candidate
+    if (routingData.is_conversational) {
+      return NextResponse.json({
+        success: true,
+        is_conversational: true,
+        embedding_model: "sqlite-fts5-local",
+        embedding_dimensions: 0,
+        similarity_formula: "BM25 full-text match ranking",
+        agents: SADIQ_AGENTS.map((agent) => ({
+          id: agent.id,
+          label: agent.label,
+          category_silo: agent.silo,
+        })),
+        injected_context: [
+          {
+            id: "chat_direct",
+            agent_id: "system",
+            agent_label: "Assistant",
+            text: "CONVERSATIONAL_DIRECT_RESPONSE: This query is conversational. Direct response authorized.",
+            source_identifier: "system",
+            source: "System",
+            page: null,
+            date: null,
+            silo: "chat",
+            qdrant_score: 1.0,
+            cosine_similarity: 1.0
+          }
+        ]
+      });
+    }
+
+    const searchQuery = routingData.search_query || body.prompt;
+
+    const [localHits, wikiHit, drugHit] = await Promise.all([
+      runLocalSearch(searchQuery),
+      fetchWikipediaSummary(searchQuery),
+      fetchApiMedicaments(searchQuery)
+    ]);
+
+    const candidates: RankedCandidate[] = localHits.map((hit) => {
+      const agent = SADIQ_AGENTS.find((a) => a.silo === hit.category_silo) || SADIQ_AGENTS[0];
+      return {
+        id: hit.id,
+        agent_id: agent.id,
+        agent_label: agent.label,
+        text: hit.text_content,
+        source_identifier: hit.source_identifier || null,
+        source: hit.origin_title || null,
+        page: hit.page_number || null,
+        date: hit.regulatory_date || null,
+        silo: hit.category_silo as CategorySilo,
+        qdrant_score: hit.score,
+        cosine_similarity: 1.0
+      };
+    });
+
+    if (wikiHit) {
+      candidates.unshift(wikiHit);
+    }
+    if (drugHit) {
+      candidates.unshift(drugHit);
+    }
+
+    const finalContext = candidates.slice(0, 6);
+
+    return NextResponse.json({
+      success: true,
+      is_conversational: false,
+      embedding_model: "sqlite-fts5-local",
+      embedding_dimensions: 0,
+      similarity_formula: "BM25 full-text match ranking",
+      agents: SADIQ_AGENTS.map((agent) => ({
+        id: agent.id,
+        label: agent.label,
+        category_silo: agent.silo,
+      })),
+      injected_context: finalContext,
+    });
+  } catch (error: unknown) {
+    return NextResponse.json(
+      { success: false, error: String(error) },
+      { status: 502 },
+    );
+  }
+}
