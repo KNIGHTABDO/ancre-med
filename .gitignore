@@ -6,3 +6,5 @@ tsconfig.tsbuildinfo
 __pycache__/
 *.pyc
 .ingest_manifest.jsonl
+
+clinical_ground_truth.db
