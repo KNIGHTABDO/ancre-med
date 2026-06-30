@@ -1,10 +1,47 @@
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Environment
 .env
 .env*.local
-.next/
-node_modules/
-tsconfig.tsbuildinfo
+
+# Database
+clinical_ground_truth.db
+*.db
+*.sqlite
+*.sqlite3
+
+# Turso
+.turso/
+
+# Python
 __pycache__/
 *.pyc
+*.pyo
+.venv/
+
+# Ingestion
 .ingest_manifest.jsonl
 
-clinical_ground_truth.db
+# IDE / Internal
+IDEA/
+test_db.txt
+
+# Vercel
+.vercel/
+
+# Build artifacts
+tsconfig.tsbuildinfo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*

@@ -1,7 +1,7 @@
 const envKeys = [
-  "QDRANT_CLUSTER_URL",
-  "QDRANT_API_KEY",
-  "GEMINI_API_KEY"
+  "GEMINI_API_KEY",
+  "TURSO_DATABASE_URL",
+  "TURSO_AUTH_TOKEN"
 ];
 
 const env = Object.fromEntries(

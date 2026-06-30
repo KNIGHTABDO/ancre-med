@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { execFile } from "child_process";
-import { promisify } from "util";
-import path from "path";
 import { GoogleGenAI, Type } from "@google/genai";
-
-const execFilePromise = promisify(execFile);
+import { createClient } from "@libsql/client";
 
 function getRequiredEnv(key: string): string {
   const value = process.env[key];
@@ -93,21 +89,96 @@ function parsePromptBody(value: unknown): RouterRequestBody {
   return { prompt: prompt.trim() };
 }
 
-async function runLocalSearch(prompt: string): Promise<any[]> {
-  const scriptPath = path.join(process.cwd(), "search_worker.py");
-  try {
-    const { stdout } = await execFilePromise("py", ["-3", scriptPath, prompt]);
-    return JSON.parse(stdout);
-  } catch (error: any) {
-    console.error("Local search execution failed, trying fallback command 'python':", error);
+const dbConfig: { url: string; authToken?: string } = {
+  url: process.env["TURSO_DATABASE_URL"] || "file:clinical_ground_truth.db",
+};
+if (process.env["TURSO_AUTH_TOKEN"]) {
+  dbConfig.authToken = process.env["TURSO_AUTH_TOKEN"];
+}
+const libsqlClient = createClient(dbConfig);
+
+function cleanFtsQuery(query: string): string {
+  const words = query.match(/\w+/g) || [];
+  return words
+    .filter(word => word.trim().length > 0)
+    .map(word => `"${word}"`)
+    .join(" OR ");
+}
+
+async function runLibSqlSearch(query: string): Promise<any[]> {
+  const ftsQuery = cleanFtsQuery(query);
+  const results: any[] = [];
+
+  if (ftsQuery) {
     try {
-      const { stdout } = await execFilePromise("python", [scriptPath, prompt]);
-      return JSON.parse(stdout);
-    } catch (fallbackError) {
-      console.error("Fallback search command also failed:", fallbackError);
-      return [];
+      const res = await libsqlClient.execute({
+        sql: `
+          SELECT d.id, d.text_content, d.origin_title, d.category_silo, d.source_identifier, d.regulatory_date, d.page_number, d.chunk_index, fts.rank
+          FROM documents_fts fts
+          JOIN documents d ON d.rowid = fts.rowid
+          WHERE documents_fts MATCH ?
+          ORDER BY fts.rank
+          LIMIT 15;
+        `,
+        args: [ftsQuery],
+      });
+
+      for (const row of res.rows as any[]) {
+        results.push({
+          id: String(row["id"]),
+          text_content: String(row["text_content"]),
+          origin_title: row["origin_title"] ? String(row["origin_title"]) : null,
+          category_silo: String(row["category_silo"]),
+          source_identifier: row["source_identifier"] ? String(row["source_identifier"]) : null,
+          regulatory_date: row["regulatory_date"] ? String(row["regulatory_date"]) : null,
+          page_number: row["page_number"] !== null && row["page_number"] !== undefined ? Number(row["page_number"]) : null,
+          chunk_index: row["chunk_index"] !== null && row["chunk_index"] !== undefined ? Number(row["chunk_index"]) : null,
+          score: row["rank"] !== null && row["rank"] !== undefined ? Number(row["rank"]) : 0.0,
+        });
+      }
+    } catch (e) {
+      console.error("FTS5 query failed via libSQL, falling back to LIKE:", e);
     }
   }
+
+  if (results.length === 0) {
+    try {
+      const words = query.match(/\w+/g) || [];
+      const likeClause = words.map(() => "text_content LIKE ?").join(" OR ");
+      const params = words.map(w => `%${w}%`);
+
+      if (likeClause) {
+        const res = await libsqlClient.execute({
+          sql: `
+            SELECT id, text_content, origin_title, category_silo, source_identifier, regulatory_date, page_number, chunk_index
+            FROM documents
+            WHERE ${likeClause}
+            LIMIT 15;
+          `,
+          args: params,
+        });
+
+        for (let i = 0; i < res.rows.length; i++) {
+          const row = res.rows[i] as any;
+          results.push({
+            id: String(row["id"]),
+            text_content: String(row["text_content"]),
+            origin_title: row["origin_title"] ? String(row["origin_title"]) : null,
+            category_silo: String(row["category_silo"]),
+            source_identifier: row["source_identifier"] ? String(row["source_identifier"]) : null,
+            regulatory_date: row["regulatory_date"] ? String(row["regulatory_date"]) : null,
+            page_number: row["page_number"] !== null && row["page_number"] !== undefined ? Number(row["page_number"]) : null,
+            chunk_index: row["chunk_index"] !== null && row["chunk_index"] !== undefined ? Number(row["chunk_index"]) : null,
+            score: -1.0 * i,
+          });
+        }
+      }
+    } catch (e) {
+      console.error("LIKE fallback query failed via libSQL:", e);
+    }
+  }
+
+  return results;
 }
 
 async function fetchWikipediaSummary(query: string): Promise<any | null> {
@@ -250,7 +321,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const searchQuery = routingData.search_query || body.prompt;
 
     const [localHits, wikiHit, drugHit] = await Promise.all([
-      runLocalSearch(searchQuery),
+      runLibSqlSearch(searchQuery),
       fetchWikipediaSummary(searchQuery),
       fetchApiMedicaments(searchQuery)
     ]);
