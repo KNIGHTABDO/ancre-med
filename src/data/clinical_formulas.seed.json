@@ -1,0 +1,94 @@
+[
+  {
+    "id": "cockcroft_gault_clcr",
+    "name_fr": "Cockcroft-Gault - clairance de la creatinine",
+    "category": "fonction_renale",
+    "formula_text": "Homme : ClCr (mL/min) = 1.23 x poids(kg) x (140 - age) / creatininemie(umol/L). Femme : ClCr (mL/min) = 1.04 x poids(kg) x (140 - age) / creatininemie(umol/L).",
+    "variables_json": {
+      "age": "annees",
+      "poids": "kg",
+      "creatininemie": "umol/L",
+      "sexe": "homme ou femme"
+    },
+    "interpretation_text": "Estimation de la clairance de la creatinine en mL/min, surtout utile pour l'adaptation posologique des medicaments quand le RCP/BDPM l'utilise.",
+    "caveats_text": "CKD-EPI est largement preferee pour le stade de maladie renale chronique en pratique generale, mais Cockcroft-Gault reste souvent la reference dans les tableaux d'adaptation posologique. Ne pas extrapoler hors des conditions cliniques pertinentes.",
+    "source_citation": "GGC Medicines Handbook, Manual calculation of creatinine clearance, https://handbook.ggcmedicines.org.uk/guidelines/infections/manual-calculation-of-creatinine-clearance/ ; National Kidney Foundation KDOQI Cockcroft-Gault overview, https://www.kidney.org/professionals/kdoqi/cockcroft-gault-equation-estimating-creatinine-clearance",
+    "verified_by": "paper-v2 section 6 curated example",
+    "verified_date": "2026-07-02"
+  },
+  {
+    "id": "cha2ds2_vasc_fa",
+    "name_fr": "CHA2DS2-VASc - risque thromboembolique en fibrillation atriale",
+    "category": "cardiologie_score",
+    "formula_text": "Insuffisance cardiaque congestive/dysfonction VG 1 ; HTA 1 ; age >=75 ans 2 ; diabete 1 ; AVC/AIT/thromboembolie anterieur 2 ; maladie vasculaire 1 ; age 65-74 ans 1 ; sexe feminin 1. Score maximal 9.",
+    "variables_json": {
+      "insuffisance_cardiaque": "0 ou 1",
+      "hta": "0 ou 1",
+      "age_75_ou_plus": "0 ou 2",
+      "diabete": "0 ou 1",
+      "avc_ait_te": "0 ou 2",
+      "maladie_vasculaire": "0 ou 1",
+      "age_65_74": "0 ou 1",
+      "sexe_feminin": "0 ou 1"
+    },
+    "interpretation_text": "Anticoagulation classiquement recommandee a partir de CHA2DS2-VASc >=2 chez l'homme ou >=3 chez la femme ; discussion individuelle aux scores intermediaires.",
+    "caveats_text": "Evolution recente : les recommandations ESC 2024 privilegient CHA2DS2-VA, qui retire le sexe feminin comme facteur de risque independant. Afficher cette nuance au lieu de choisir silencieusement un seul score.",
+    "source_citation": "MDCalc CHA2DS2-VASc score, https://www.mdcalc.com/calc/801/cha2ds2-vasc-score-atrial-fibrillation-stroke-risk ; 2024 ESC AF guideline page, https://www.escardio.org/guidelines/clinical-practice-guidelines/all-esc-practice-guidelines/atrial-fibrillation/",
+    "verified_by": "paper-v2 section 6 curated example",
+    "verified_date": "2026-07-02"
+  },
+  {
+    "id": "cha2ds2_va_esc_2024",
+    "name_fr": "CHA2DS2-VA - variante ESC 2024 sans sexe",
+    "category": "cardiologie_score",
+    "formula_text": "Insuffisance cardiaque congestive/dysfonction VG 1 ; HTA 1 ; age >=75 ans 2 ; diabete 1 ; AVC/AIT/thromboembolie anterieur 2 ; maladie vasculaire 1 ; age 65-74 ans 1. Le sexe feminin n'ajoute pas de point. Score maximal 8.",
+    "variables_json": {
+      "insuffisance_cardiaque": "0 ou 1",
+      "hta": "0 ou 1",
+      "age_75_ou_plus": "0 ou 2",
+      "diabete": "0 ou 1",
+      "avc_ait_te": "0 ou 2",
+      "maladie_vasculaire": "0 ou 1",
+      "age_65_74": "0 ou 1"
+    },
+    "interpretation_text": "Selon les syntheses ESC 2024, anticoagulation orale recommandee si CHA2DS2-VA >=2 ; a considerer si score =1 ; non indiquee si score =0, sous reserve du jugement clinique et du risque hemorragique.",
+    "caveats_text": "Score issu d'une evolution recente des recommandations ESC ; conserver CHA2DS2-VASc dans les contextes ou les recommandations locales ou americaines l'exigent.",
+    "source_citation": "ESC 2024 AF guideline page, https://www.escardio.org/guidelines/clinical-practice-guidelines/all-esc-practice-guidelines/atrial-fibrillation/ ; ACC key points summary of ESC 2024 AF guidelines, https://www.acc.org/latest-in-cardiology/ten-points-to-remember/2024/09/17/04/05/2024-esc-guidelines-for-af-esc-2024",
+    "verified_by": "paper-v2 section 6 curated example",
+    "verified_date": "2026-07-02"
+  },
+  {
+    "id": "qsofa_sepsis",
+    "name_fr": "qSOFA - reperage rapide du sepsis",
+    "category": "urgence_score",
+    "formula_text": "Frequence respiratoire >=22/min 1 ; pression arterielle systolique <=100 mmHg 1 ; alteration de la conscience avec Glasgow <15 1. Score de 0 a 3.",
+    "variables_json": {
+      "frequence_respiratoire": "par minute",
+      "pression_arterielle_systolique": "mmHg",
+      "glasgow": "score de Glasgow"
+    },
+    "interpretation_text": "Chez un patient suspect d'infection, qSOFA >=2 signale un risque accru de mauvais pronostic et doit conduire a une evaluation clinique urgente, sans remplacer le diagnostic de sepsis.",
+    "caveats_text": "qSOFA est un outil de reperage au lit du malade, pas un critere diagnostique autonome du sepsis ; performance plus discutee chez les sujets ages.",
+    "source_citation": "Sepsis-3 consensus, JAMA 2016 / PMC, https://pmc.ncbi.nlm.nih.gov/articles/PMC4968574/ ; qSOFA criteria overview, https://qsofa.org/what.php",
+    "verified_by": "paper-v2 section 6 curated example",
+    "verified_date": "2026-07-02"
+  },
+  {
+    "id": "child_pugh_cirrhose",
+    "name_fr": "Child-Pugh - severite de la cirrhose",
+    "category": "hepatologie_score",
+    "formula_text": "Bilirubine umol/L : <35 =1, 35-50 =2, >50 =3. Albumine g/L : >35 =1, 28-35 =2, <28 =3. TP % : >50 =1, 40-50 =2, <40 =3. Ascite : absente =1, minime =2, moderee/refractaire =3. Encephalopathie : absente =1, grade I-II =2, grade III-IV =3.",
+    "variables_json": {
+      "bilirubine": "umol/L",
+      "albumine": "g/L",
+      "tp": "%",
+      "ascite": "absente|minime|moderee_refractaire",
+      "encephalopathie": "absente|grade_I_II|grade_III_IV"
+    },
+    "interpretation_text": "Classe A = 5-6 points ; classe B = 7-9 points ; classe C = 10-15 points. La classification estime la severite de la cirrhose et le pronostic.",
+    "caveats_text": "Les sources divergent sur certains seuils TP/INR et sur les conversions bilirubine mg/dL/umol/L. Version stockee en umol/L et TP %, conforme au spec v2 ; confirmer contre la reference institutionnelle avant activation clinique.",
+    "source_citation": "MDCalc Child-Pugh score, https://www.mdcalc.com/calc/340/child-pugh-score-cirrhosis-mortality ; paper-v2 section 6 caveat CHUV/revmed cross-reference",
+    "verified_by": "paper-v2 section 6 curated example",
+    "verified_date": "2026-07-02"
+  }
+]

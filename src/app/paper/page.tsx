@@ -6,6 +6,7 @@ import type { JSX } from "react";
 
 export default function PaperPage(): JSX.Element {
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
+  const qualityPolishEnabled = process.env["ANCREMED_V2_QUALITY_POLISH"] === "true";
   return (
     <main className="workspace-shell academic-paper-theme">
       {/* Navigation Header */}
@@ -82,8 +83,9 @@ export default function PaperPage(): JSX.Element {
                 indexing 76,303 chunks from the Haute Autorité de Santé (HAS), the Base de Données Publique des Médicaments (BDPM), 
                 and official EDN teaching materials. By integrating an LLM-based query reformulator with a strict clinician-in-the-loop 
                 attribution gate, AncreMed verifies every clinical assertion word-for-word against local source texts. 
-                Our local-first retrieval mechanism runs in under 100 milliseconds and completely bypasses remote embedding API charges, 
-                providing a cost-free, offline-ready framework for medical faculties.
+                {qualityPolishEnabled
+                  ? "Our local-first retrieval mechanism avoids remote embedding API charges while the v2 trust layer reports coverage, abstentions, and independent verification for source-bound numerical claims."
+                  : "Our local-first retrieval mechanism runs in under 100 milliseconds and completely bypasses remote embedding API charges, providing a cost-free, offline-ready framework for medical faculties."}
               </p>
             </div>
 
@@ -427,10 +429,15 @@ ORDER BY score ASC LIMIT :limit;`}
               </li>
             </ol>
             <p>
-              If the ratio of verified assertions falls below <strong>70%</strong>, or if the model fails to justify its claims 
-              with at least one verified source quote, the entire response is rejected. 
-              The server terminates the connection and returns a <code>422 Unprocessable Entity</code> response, which displays a 
-              red warning message in the student's console.
+              <strong>Update (v2.1):</strong> earlier revisions rejected the entire response whenever a single 
+              assertion fell below <strong>70%</strong> verified, or whenever any one claim failed either check above — 
+              in practice this meant one disputed sentence could discard an otherwise well-grounded answer. 
+              The gate now filters at the assertion level: claims that fail string containment, entity consistency, 
+              or the independent verifier (§5.4) are dropped individually, while narrative text, verified claims, 
+              and honest abstentions are still served to the student. 
+              The server only returns <code>422 Unprocessable Entity</code> when nothing usable survives filtering — 
+              no verified assertion, no abstention, and no narrative text — which is reserved for genuine 
+              generation failures rather than isolated verifier disagreement.
             </p>
 
             <h3>5.2 Word-by-Word Exact Alignment Algorithm</h3>
@@ -465,6 +472,23 @@ ORDER BY score ASC LIMIT :limit;`}
               <code>"dose initiale de tirzepatide est de 2 5 mg"</code> matches the text segment. 
               The claim is marked as verified, and the API returns <code>200 OK</code>.</p>
             </div>
+            <h3>5.4 Independent Verifier: Recalibrated for Substance, Not Style</h3>
+            <p>
+              A second, independently-invoked model call re-checks every assertion that already passed the 
+              deterministic gate in §5.1, using a distinct adversarial prompt so it does not share the generator's 
+              blind spots. In its first iteration this verifier was instructed to "stay skeptical by default" and 
+              "be strict," which in practice rejected correctly-sourced claims whenever the generator's phrasing 
+              diverged even slightly from the source wording — a false-negative rate that produced frequent, 
+              unwarranted blocks on well-established clinical facts.
+            </p>
+            <p>
+              The verifier prompt was recalibrated to judge clinical substance rather than literary fidelity: it now 
+              rejects an assertion only if the source is contradicted, a number or threshold is fabricated, or a 
+              true quote is attached to the wrong subject (wrong drug, wrong pathology, wrong patient subgroup). 
+              Paraphrase, summarization, or stylistic rewording that preserves the clinical meaning of the source is 
+              no longer grounds for rejection. Combined with the per-assertion filtering in §5.1, a single verifier 
+              disagreement now removes one sentence instead of the entire answer.
+            </p>
           </section>
 
           {/* Section 6: Technical Performance */}
@@ -554,7 +578,9 @@ ORDER BY score ASC LIMIT :limit;`}
             <p>
               We tested the Clinical Attribution Gate with 200 clinical questions. 
               The system successfully blocked <strong>18 false assertions</strong> (hallucinated dosages or guidelines), 
-              achieving a precision score of 100% for clinical safety.
+              {qualityPolishEnabled
+                ? " surfacing a coverage-aware safety signal for clinical education rather than an absolute guarantee."
+                : " achieving a precision score of 100% for clinical safety."}
             </p>
           </section>
 
@@ -630,8 +656,6 @@ ORDER BY score ASC LIMIT :limit;`}
         }
 
         .header-container {
-          max-width: 1100px;
-          margin: 0 auto;
           height: 100%;
           display: flex;
           align-items: center;

@@ -110,8 +110,6 @@ export default function PrivacyPage(): JSX.Element {
         }
 
         .header-container {
-          max-width: 1100px;
-          margin: 0 auto;
           height: 100%;
           display: flex;
           align-items: center;

@@ -57,6 +57,94 @@ export default function ChangelogPage(): JSX.Element {
           <p className="subtitle">Suivez l'évolution technique et clinique du moteur AncreMed.</p>
 
           <div className="changelog-list">
+            {/* Version 2.1.0 */}
+            <section className="changelog-item">
+              <div className="changelog-meta">
+                <span className="version-badge">v2.1.0</span>
+                <time className="changelog-date">Juil. 2, 2026</time>
+              </div>
+              <div className="changelog-details">
+                <h2>Valve clinique v2 : dégradation gracieuse au lieu du blocage total</h2>
+                <p>
+                  La valve de revue clinique bloquait la réponse entière dès qu'une seule affirmation
+                  était contestée, même quand la question était factuellement simple et bien établie
+                  (ex. score CHA2DS2-VASc). Elle bloque désormais uniquement quand la réponse ne contient
+                  vraiment rien d'exploitable pour l'étudiant.
+                </p>
+                <ul>
+                  <li>
+                    <strong>Rejet ciblé, pas collectif :</strong> chaque affirmation clinique est encore
+                    vérifiée mot à mot (citation exacte) et par entité source, mais seule l'affirmation
+                    fautive est retirée de la réponse. Le reste du texte, correctement sourcé, est
+                    conservé et affiché à l'étudiant au lieu d'être supprimé avec elle.
+                  </li>
+                  <li>
+                    <strong>Vérificateur indépendant recalibré :</strong> le second modèle de vérification
+                    (Gemini Flash-Lite, appel séparé) restait volontairement "sceptique par défaut" et
+                    invalidait des citations correctement attribuées à cause d'une simple reformulation.
+                    Sa consigne se concentre maintenant sur le fond clinique (bon médicament, bonne
+                    pathologie, bon sous-groupe, bon chiffre) plutôt que sur la fidélité littérale du
+                    style, tout en continuant à rejeter tout mélange de sujet ou chiffre inventé.
+                  </li>
+                  <li>
+                    <strong>Suppression du filtre de mots-clés sur les paragraphes narratifs :</strong> les
+                    passages explicatifs n'étaient plus autorisés à contenir le moindre chiffre ou mot
+                    comme "score"/"seuil", ce qui bloquait des réponses pourtant correctes. La consigne au
+                    modèle de séparer narration et affirmation chiffrée est renforcée dans le prompt, sans
+                    filtre déterministe par expression régulière.
+                  </li>
+                  <li>
+                    <strong>Blocage réservé aux échecs réels :</strong> la réponse n'est désormais rejetée
+                    (422) que si, après filtrage, il ne reste ni affirmation vérifiée, ni abstention
+                    honnête, ni texte narratif exploitable — un vrai échec de génération, pas une simple
+                    divergence d'un vérificateur.
+                  </li>
+                </ul>
+              </div>
+            </section>
+
+            {/* Version 2.0.0 */}
+            <section className="changelog-item">
+              <div className="changelog-meta">
+                <span className="version-badge">v2.0.0</span>
+                <time className="changelog-date">Juil. 1, 2026</time>
+              </div>
+              <div className="changelog-details">
+                <h2>AncreMed v2 : recherche approfondie, spans attribués et banque de calculs</h2>
+                <p>
+                  Refonte majeure du moteur de récupération et de génération, déployée en cinq phases
+                  (voir <code>IMPLEMENTATION_LOG.md</code>).
+                </p>
+                <ul>
+                  <li>
+                    <strong>Recherche approfondie multi-tours :</strong> un planificateur classe la question
+                    par sujet, relance des recherches FTS5/BM25 ciblées par section manquante, et s'arrête
+                    dès la couverture atteinte ou un nombre de tours borné.
+                  </li>
+                  <li>
+                    <strong>Réponses en "spans" attribués :</strong> chaque réponse est désormais composée de
+                    segments narratifs, d'affirmations cliniques sourcées (citation exacte + identifiant
+                    d'entité) et d'abstentions explicites pour les sections non couvertes par le corpus.
+                  </li>
+                  <li>
+                    <strong>Banque de calculs cliniques vérifiés :</strong> Cockcroft-Gault, CHA2DS2-VASc et
+                    sa variante ESC 2024 (CHA2DS2-VA), qSOFA et Child-Pugh sont servis depuis une table
+                    dédiée et priorisés pour les questions de calcul clinique.
+                  </li>
+                  <li>
+                    <strong>Vérificateur indépendant et fraîcheur des sources :</strong> un second appel
+                    modèle contrôle chaque affirmation contre son document source, et les recommandations
+                    HAS/BDPM obsolètes sont marquées <code>superseded</code> pour ne plus être citées.
+                  </li>
+                  <li>
+                    <strong>Tolérance aux fautes de frappe, cache et indicateur de couverture :</strong>{" "}
+                    correction légère des requêtes mal orthographiées, mise en cache des réponses pour les
+                    classes de questions stables, et affichage du niveau de couverture de chaque réponse.
+                  </li>
+                </ul>
+              </div>
+            </section>
+
             {/* Version 0.2.0 */}
             <section className="changelog-item">
               <div className="changelog-meta">
@@ -136,8 +224,6 @@ export default function ChangelogPage(): JSX.Element {
         }
 
         .header-container {
-          max-width: 1100px;
-          margin: 0 auto;
           height: 100%;
           display: flex;
           align-items: center;

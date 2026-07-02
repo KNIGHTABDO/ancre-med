@@ -6,6 +6,7 @@ import type { JSX } from "react";
 
 export default function LandingPage(): JSX.Element {
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
+  const qualityPolishEnabled = process.env["ANCREMED_V2_QUALITY_POLISH"] === "true";
   return (
     <main className="workspace-shell">
       {/* Navigation Header */}
@@ -55,11 +56,20 @@ export default function LandingPage(): JSX.Element {
       <section className="hero-section">
         <div className="hero-container">
           <span className="hero-badge">Console RAG Clinique Haute-Attribution</span>
-          <h1>L'intelligence médicale clinique, <br /><span className="text-teal">garantie sans hallucinations</span></h1>
+          <h1>
+            L'intelligence médicale clinique, <br />
+            <span className="text-teal">
+              {qualityPolishEnabled
+                ? "avec affirmations chiffrées vérifiées"
+                : "garantie sans hallucinations"}
+            </span>
+          </h1>
           <p className="hero-desc">
             Interrogez en temps réel 76 303 fiches issues des référentiels de la <strong>Haute Autorité de Santé (HAS)</strong>, 
             de la <strong>Base des Médicaments (ANSM)</strong> et du <strong>Collège des Enseignants (EDN)</strong>. 
-            Une double valve d'attribution vérifie chaque fait mot à mot.
+            {qualityPolishEnabled
+              ? " Chaque affirmation chiffrée est vérifiée mot à mot et par un second modèle indépendant contre le texte source."
+              : " Une double valve d'attribution vérifie chaque fait mot à mot."}
           </p>
           <div className="hero-actions">
             <Link href="/chat" className="btn btn-primary">
@@ -257,8 +267,6 @@ export default function LandingPage(): JSX.Element {
         }
 
         .header-container {
-          max-width: 1100px;
-          margin: 0 auto;
           height: 100%;
           display: flex;
           align-items: center;

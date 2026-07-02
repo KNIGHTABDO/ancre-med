@@ -18,10 +18,16 @@ interface RetrievedContextChunk {
   readonly silo: string | null;
   readonly qdrant_score: number;
   readonly cosine_similarity: number;
+  readonly section?: string;
 }
 
 interface RouterPayload {
   readonly injected_context: readonly RetrievedContextChunk[];
+  readonly primary_class: string | null;
+  readonly secondary_class: string | null;
+  readonly retrieval_plan: Record<string, unknown> | null;
+  readonly retrieval_coverage: Record<string, unknown> | null;
+  readonly feature_flags: Record<string, boolean> | null;
 }
 
 interface ClinicalAssertion {
@@ -38,6 +44,7 @@ interface GeneratePayload {
   readonly thinking_trace_fr: string;
   readonly verified_assertions: readonly ClinicalAssertion[];
   readonly dropped_assertion_count: number;
+  readonly coverage: CoveragePayload | null;
 }
 
 interface GenerateResponse {
@@ -94,6 +101,15 @@ interface EndpointFailureVerification {
   readonly verified_assertions: number | undefined;
   readonly dropped_assertions: number | undefined;
   readonly minimum_confidence_score: number | undefined;
+}
+
+interface CoveragePayload {
+  readonly rounds_used: number;
+  readonly sub_queries_issued: number;
+  readonly total_chunks: number;
+  readonly uncovered_sections: readonly string[];
+  readonly silos_touched: readonly string[];
+  readonly distinct_sources: number;
 }
 
 const PRIVACY_NOTICE =
@@ -179,6 +195,29 @@ function readNullableNumber(record: Record<string, unknown>, key: string): numbe
     throw new Error(`Le champ '${key}' doit être un nombre ou null.`);
   }
   return value;
+}
+
+function readStringArray(record: Record<string, unknown>, key: string): readonly string[] {
+  const value = record[key];
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.filter((item): item is string => typeof item === "string" && item.length > 0);
+}
+
+function parseCoveragePayload(value: unknown): CoveragePayload | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  return {
+    rounds_used: readNullableNumber(value, "rounds_used") ?? 0,
+    sub_queries_issued: readNullableNumber(value, "sub_queries_issued") ?? 0,
+    total_chunks: readNullableNumber(value, "total_chunks") ?? 0,
+    uncovered_sections: readStringArray(value, "uncovered_sections"),
+    silos_touched: readStringArray(value, "silos_touched"),
+    distinct_sources: readNullableNumber(value, "distinct_sources") ?? 0,
+  };
 }
 
 function extractErrorMessage(value: unknown, fallback: string): string {
@@ -268,6 +307,8 @@ function parseContextChunk(value: unknown, index: number): RetrievedContextChunk
     throw new Error(`Le fragment de contexte ${index + 1} n'est pas un objet.`);
   }
 
+  const section = readNullableString(value, "section");
+
   return {
     id: readRequiredString(value, "id"),
     agent_id: readRequiredString(value, "agent_id"),
@@ -280,6 +321,7 @@ function parseContextChunk(value: unknown, index: number): RetrievedContextChunk
     silo: readNullableString(value, "silo"),
     qdrant_score: readRequiredNumber(value, "qdrant_score"),
     cosine_similarity: readRequiredNumber(value, "cosine_similarity"),
+    ...(section !== null ? { section } : {}),
   };
 }
 
@@ -298,6 +340,17 @@ function parseRouterPayload(value: unknown): RouterPayload {
 
   return {
     injected_context: injectedContext.map((chunk, index) => parseContextChunk(chunk, index)),
+    primary_class: readNullableString(value, "primary_class") ?? readNullableString(value, "topic_class"),
+    secondary_class: readNullableString(value, "secondary_class"),
+    retrieval_plan: isRecord(value["retrieval_plan"]) ? value["retrieval_plan"] : null,
+    retrieval_coverage: isRecord(value["retrieval_coverage"]) ? value["retrieval_coverage"] : null,
+    feature_flags: isRecord(value["feature_flags"])
+      ? Object.fromEntries(
+          Object.entries(value["feature_flags"]).filter(
+            (entry): entry is [string, boolean] => typeof entry[1] === "boolean",
+          ),
+        )
+      : null,
   };
 }
 
@@ -335,15 +388,16 @@ function parseGeneratePayload(value: unknown): GenerateResponse {
 
   return {
     model: readNullableString(value, "model"),
-    payload: {
-      sujet_titre: readRequiredString(payload, "sujet_titre"),
-      reponse_clinique: readRequiredString(payload, "reponse_clinique"),
-      thinking_trace_fr: readRequiredString(payload, "thinking_trace_fr"),
-      verified_assertions: assertions.map((assertion, index) =>
-        parseClinicalAssertion(assertion, index),
-      ),
-      dropped_assertion_count: readRequiredNumber(payload, "dropped_assertion_count"),
-    },
+      payload: {
+        sujet_titre: readRequiredString(payload, "sujet_titre"),
+        reponse_clinique: readRequiredString(payload, "reponse_clinique"),
+        thinking_trace_fr: readRequiredString(payload, "thinking_trace_fr"),
+        verified_assertions: assertions.map((assertion, index) =>
+          parseClinicalAssertion(assertion, index),
+        ),
+        dropped_assertion_count: readRequiredNumber(payload, "dropped_assertion_count"),
+        coverage: parseCoveragePayload(payload["coverage"]),
+      },
   };
 }
 
@@ -356,6 +410,10 @@ async function runMedicalPipeline(prompt: string): Promise<{
     await postJson("/api/generate", {
       query: prompt,
       retrievedContext: routerPayload.injected_context,
+      topicClass: routerPayload.primary_class,
+      secondaryClass: routerPayload.secondary_class,
+      retrievalPlan: routerPayload.retrieval_plan,
+      retrievalCoverage: routerPayload.retrieval_coverage,
     }),
   );
 
@@ -712,6 +770,7 @@ interface Message {
   readonly thinking?: string;
   readonly context?: readonly RetrievedContextChunk[];
   readonly verified_assertions?: readonly ClinicalAssertion[];
+  readonly coverage?: CoveragePayload | null;
   readonly error?: string;
   readonly processing?: boolean;
 }
@@ -815,6 +874,21 @@ function getGroupedReferences(
   return docs;
 }
 
+function CoverageIndicator({ coverage }: { readonly coverage: CoveragePayload }): JSX.Element {
+  const silos = coverage.silos_touched.length > 0 ? coverage.silos_touched.join(", ") : "corpus";
+  return (
+    <div className="coverage-indicator">
+      <span>{coverage.distinct_sources} source(s)</span>
+      <span>{silos}</span>
+      <span>{coverage.rounds_used} round(s)</span>
+      <span>{coverage.total_chunks} extrait(s)</span>
+      {coverage.uncovered_sections.length > 0 && (
+        <span>Abstention: {coverage.uncovered_sections.join(", ")}</span>
+      )}
+    </div>
+  );
+}
+
 export default function HomePage(): JSX.Element {
   const [inputValue, setInputValue] = useState<string>("");
   const [chats, setChats] = useState<readonly Chat[]>([]);
@@ -909,6 +983,7 @@ export default function HomePage(): JSX.Element {
         thinking: pipelineResult.generation.payload.thinking_trace_fr,
         context: pipelineResult.router.injected_context,
         verified_assertions: pipelineResult.generation.payload.verified_assertions,
+        coverage: pipelineResult.generation.payload.coverage,
       };
 
       const finalChats = updatedChats.map((c) => {
@@ -1041,7 +1116,6 @@ export default function HomePage(): JSX.Element {
         <aside className={`sidebar ${sidebarOpen ? "open" : ""} ${!desktopSidebarOpen ? "collapsed" : ""}`} aria-label="Historique des discussions">
           <div className="sidebar-header">
             <div className="sidebar-brand-row">
-              <p className="sidebar-brand">AncreMed</p>
               <div className="sidebar-controls">
                 <button
                   aria-label="Réduire la barre latérale"
@@ -1189,6 +1263,9 @@ export default function HomePage(): JSX.Element {
                       <div className="message-row assistant-row" key={msg.id}>
                         <div className="message-bubble assistant-bubble">
                           <p className="assistant-badge">RÉPONSE CLINIQUE</p>
+                          {msg.coverage !== undefined && msg.coverage !== null && (
+                            <CoverageIndicator coverage={msg.coverage} />
+                          )}
                           <div className="clinical-response-content">
                             {renderClinicalResponse(msg.content)}
                           </div>
@@ -1456,8 +1533,6 @@ export default function HomePage(): JSX.Element {
         }
 
         .header-container {
-          max-width: 1100px;
-          margin: 0 auto;
           height: 100%;
           display: flex;
           align-items: center;
@@ -1523,8 +1598,7 @@ export default function HomePage(): JSX.Element {
           backdrop-filter: blur(14px);
           display: flex;
           flex-direction: column;
-          justify-content: space-between;
-          padding: 24px 18px 18px;
+          padding: 24px 18px 0;
           flex-shrink: 0;
           z-index: 10;
         }
@@ -1533,30 +1607,32 @@ export default function HomePage(): JSX.Element {
           display: flex;
           flex-direction: column;
           gap: 20px;
+          flex-shrink: 0;
         }
 
         .sidebar-brand-row {
           display: flex;
           align-items: center;
-          justify-content: space-between;
-        }
-
-        .sidebar-brand {
-          margin: 0;
-          color: #005c53;
-          font-size: 22px;
-          font-weight: 760;
-          letter-spacing: -0.012em;
+          justify-content: flex-end;
         }
 
         .menu-close-btn {
           display: none;
           align-items: center;
           justify-content: center;
+          min-width: 32px;
+          min-height: 32px;
           background: transparent;
           border: 0;
           color: #64716d;
           padding: 4px;
+          border-radius: 8px;
+          transition: all 160ms ease;
+        }
+
+        .menu-close-btn:hover {
+          background: rgba(134, 148, 144, 0.14);
+          color: #005c53;
         }
 
         .btn-new-chat {
@@ -1652,16 +1728,22 @@ export default function HomePage(): JSX.Element {
         }
 
         .sidebar-footer {
-          border-top: 1px solid rgba(134, 148, 144, 0.14);
-          padding-top: 12px;
+          flex-shrink: 0;
           margin-top: auto;
+          margin-left: -18px;
+          margin-right: -18px;
+          padding: 12px 18px 18px;
+          border-top: 1px solid rgba(134, 148, 144, 0.16);
+          background: rgba(238, 240, 239, 0.6);
         }
 
         .version-tag {
+          display: block;
           font-size: 11px;
           color: #9aa4a0;
           font-weight: 600;
           letter-spacing: 0.02em;
+          text-align: center;
         }
 
         /* Mobile Header */
@@ -1704,7 +1786,8 @@ export default function HomePage(): JSX.Element {
         /* Main Viewport Styles */
         .main-viewport {
           flex: 1;
-          height: 100dvh;
+          height: 100%;
+          min-height: 0;
           display: flex;
           flex-direction: column;
           position: relative;
@@ -1773,12 +1856,14 @@ export default function HomePage(): JSX.Element {
           display: flex;
           flex-direction: column;
           height: 100%;
+          min-height: 0;
           width: 100%;
           position: relative;
         }
 
         .chat-scroller {
           flex: 1;
+          min-height: 0;
           overflow-y: auto;
           padding: 40px 24px 24px;
           display: flex;
@@ -1843,6 +1928,27 @@ export default function HomePage(): JSX.Element {
           font-size: 11px;
           font-weight: 780;
           letter-spacing: 0.06em;
+        }
+
+        .coverage-indicator {
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 6px;
+          margin: 0 0 14px;
+          color: #4e625e;
+          font-size: 11.5px;
+          line-height: 1.35;
+        }
+
+        .coverage-indicator span {
+          display: inline-flex;
+          align-items: center;
+          min-height: 22px;
+          padding: 0 7px;
+          border: 1px solid rgba(0, 92, 83, 0.14);
+          border-radius: 6px;
+          background: rgba(232, 248, 245, 0.5);
         }
 
         .processing-bubble {
@@ -2293,6 +2399,8 @@ export default function HomePage(): JSX.Element {
           display: flex;
           align-items: center;
           justify-content: center;
+          min-width: 32px;
+          min-height: 32px;
           background: transparent;
           border: 0;
           color: #64716d;
@@ -2306,26 +2414,26 @@ export default function HomePage(): JSX.Element {
         }
         .floating-expand-btn {
           position: fixed;
-          top: 18px;
+          top: 78px;
           left: 18px;
-          z-index: 100;
+          z-index: 120;
           display: flex;
           align-items: center;
           justify-content: center;
           width: 38px;
           height: 38px;
-          background: rgba(255, 255, 255, 0.9);
+          background: rgba(255, 255, 255, 0.96);
           border: 1px solid rgba(134, 148, 144, 0.28);
           border-radius: 10px;
           color: #005c53;
-          box-shadow: 0 4px 14px rgba(25, 42, 38, 0.06);
+          box-shadow: 0 4px 14px rgba(25, 42, 38, 0.1);
           transition: all 180ms ease;
           animation: fade-in 180ms ease both;
         }
         .floating-expand-btn:hover {
           background: #ffffff;
           transform: scale(1.05);
-          box-shadow: 0 6px 18px rgba(0, 92, 83, 0.12);
+          box-shadow: 0 6px 18px rgba(0, 92, 83, 0.16);
         }
 
         /* Mobile bottom navigation */
@@ -2529,6 +2637,11 @@ export default function HomePage(): JSX.Element {
 
           .menu-close-btn {
             display: flex;
+          }
+
+          .btn-collapse-sidebar,
+          .floating-expand-btn {
+            display: none !important;
           }
 
           .sidebar-backdrop {

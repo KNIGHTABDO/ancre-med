@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI, Type } from "@google/genai";
 import { createClient } from "@libsql/client";
 
+import { SADIQ_AGENTS, agentForSilo, type CategorySilo, type RetrievedContextChunk } from "@/lib/clinicalTypes";
+import { conversationalContext, deepSearch } from "@/lib/deepSearch";
+import { featureFlagSnapshot, isFeatureEnabled } from "@/lib/featureFlags";
+import { searchClinicalFormulas } from "@/lib/formulaBank";
+import { ensureFreshnessSchema } from "@/lib/freshness";
+import { correctMedicalTypos } from "@/lib/typoCorrection";
+
 function getRequiredEnv(key: string): string {
   const value = process.env[key];
   if (typeof value !== "string" || value.trim().length === 0) {
@@ -33,26 +40,7 @@ Your task is to analyze the user's message and decide:
 3. If is_conversational is false, write an optimized search_query in French. You must reformulate the user's query to maximize keyword search hits in a database (e.g., if they ask 'Qu'est-ce que le tirzépatide ?', reformulate to 'tirzepatide indications posologie avis'). Include key medical terms, synonyms, and variations of the condition or drug name.
 `.trim();
 
-const SADIQ_AGENTS = [
-  {
-    id: "agent_a_semiologie",
-    label: "Agent A (Sémiologie)",
-    silo: "colles_enseignants_edn",
-  },
-  {
-    id: "agent_b_pharmacologie",
-    label: "Agent B (Pharmacologie)",
-    silo: "ansm_bdpm_vidal",
-  },
-  {
-    id: "agent_c_anatomie",
-    label: "Agent C (Anatomie)",
-    silo: "has_recommandations",
-  },
-] as const;
-
 type SadiqAgent = (typeof SADIQ_AGENTS)[number];
-type CategorySilo = SadiqAgent["silo"];
 
 interface RouterRequestBody {
   prompt: string;
@@ -60,14 +48,14 @@ interface RouterRequestBody {
 
 interface RankedCandidate {
   id: string;
-  agent_id: SadiqAgent["id"];
+  agent_id: SadiqAgent["id"] | string;
   agent_label: SadiqAgent["label"] | string;
   text: string;
   source_identifier: string | null;
   source: string | null;
   page: number | null;
   date: string | null;
-  silo: CategorySilo;
+  silo: CategorySilo | string | null;
   qdrant_score: number;
   cosine_similarity: number;
 }
@@ -181,7 +169,7 @@ async function runLibSqlSearch(query: string): Promise<any[]> {
   return results;
 }
 
-async function fetchWikipediaSummary(query: string): Promise<any | null> {
+async function fetchWikipediaSummary(query: string): Promise<RetrievedContextChunk | null> {
   try {
     const searchUrl = `https://fr.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`;
     const searchResponse = await fetch(searchUrl, { signal: AbortSignal.timeout(3000) });
@@ -219,7 +207,7 @@ async function fetchWikipediaSummary(query: string): Promise<any | null> {
   }
 }
 
-async function fetchApiMedicaments(query: string): Promise<any | null> {
+async function fetchApiMedicaments(query: string): Promise<RetrievedContextChunk | null> {
   try {
     const searchUrl = `https://api-medicaments.fr/api/v1/medicaments?query=${encodeURIComponent(query)}`;
     const searchResponse = await fetch(searchUrl, { signal: AbortSignal.timeout(3000) });
@@ -272,11 +260,104 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const apiKey = getRequiredEnv("GEMINI_API_KEY");
     const aiStudio = new GoogleGenAI({ apiKey });
+    const retrievalPrompt = isFeatureEnabled("qualityPolish")
+      ? await correctMedicalTypos(libsqlClient, body.prompt)
+      : body.prompt;
+
+    if (isFeatureEnabled("deepSearch")) {
+      if (isFeatureEnabled("verifierFreshness")) {
+        await ensureFreshnessSchema(libsqlClient);
+      }
+
+      const searchResult = await deepSearch({
+        prompt: retrievalPrompt,
+        aiStudio,
+        db: libsqlClient,
+        excludeSuperseded: isFeatureEnabled("verifierFreshness"),
+      });
+
+      const agents = SADIQ_AGENTS.map((agent) => ({
+        id: agent.id,
+        label: agent.label,
+        category_silo: agent.silo,
+      }));
+
+      if (searchResult.plan.primary_class === "conversationnel") {
+        return NextResponse.json({
+          success: true,
+          is_conversational: true,
+          topic_class: searchResult.plan.primary_class,
+          primary_class: searchResult.plan.primary_class,
+          secondary_class: searchResult.plan.secondary_class,
+          embedding_model: "sqlite-fts5-local",
+          embedding_dimensions: 0,
+          similarity_formula: "BM25 full-text match ranking",
+          feature_flags: featureFlagSnapshot(),
+          agents,
+          retrieval_coverage: {
+            rounds_used: searchResult.roundsUsed,
+            sub_queries_issued: searchResult.subQueriesIssued,
+            total_chunks: searchResult.totalChunks,
+            uncovered_sections: searchResult.uncoveredSections,
+            sections_covered: searchResult.sectionsCovered,
+          },
+          injected_context: conversationalContext(),
+        });
+      }
+
+      const liveLookupQuery =
+        searchResult.plan.sub_queries.map((subQuery) => subQuery.query).join(" ") || retrievalPrompt;
+      const [wikiHit, drugHit, formulaHits] = await Promise.all([
+        fetchWikipediaSummary(liveLookupQuery),
+        fetchApiMedicaments(liveLookupQuery),
+        isFeatureEnabled("formulaBank")
+          ? searchClinicalFormulas(libsqlClient, liveLookupQuery, 4)
+          : Promise.resolve([]),
+      ]);
+      const liveHits = [drugHit, wikiHit].filter(
+        (hit): hit is RetrievedContextChunk => hit !== null,
+      );
+      const finalContext = [...formulaHits, ...liveHits, ...searchResult.injectedContext].slice(0, 30);
+      const formulaCoveredSections = formulaHits.length > 0 ? ["formule", "interpretation"] : [];
+      const uncoveredSections = searchResult.uncoveredSections.filter(
+        (section) => !formulaCoveredSections.includes(section),
+      );
+      const sectionsCovered = [
+        ...searchResult.sectionsCovered,
+        ...formulaCoveredSections.map((section) => ({
+          section,
+          chunkIds: formulaHits.map((hit) => hit.id),
+        })),
+      ];
+
+      return NextResponse.json({
+        success: true,
+        is_conversational: false,
+        topic_class: searchResult.plan.primary_class,
+        primary_class: searchResult.plan.primary_class,
+        secondary_class: searchResult.plan.secondary_class,
+        retrieval_plan: searchResult.plan,
+        embedding_model: "sqlite-fts5-local",
+        embedding_dimensions: 0,
+        similarity_formula: "BM25 full-text match ranking",
+        feature_flags: featureFlagSnapshot(),
+        agents,
+        retrieval_coverage: {
+          rounds_used: searchResult.roundsUsed,
+          sub_queries_issued: searchResult.subQueriesIssued,
+          total_chunks: searchResult.totalChunks + formulaHits.length,
+          uncovered_sections: uncoveredSections,
+          sections_covered: sectionsCovered,
+          used_queries: searchResult.usedQueries,
+        },
+        injected_context: finalContext,
+      });
+    }
 
     // Call Gemini to classify query and reformulate it
     const routingResponse = await aiStudio.models.generateContent({
       model: "gemini-3.1-flash-lite",
-      contents: body.prompt,
+      contents: retrievalPrompt,
       config: {
         systemInstruction: ROUTING_INSTRUCTION,
         responseMimeType: "application/json",
@@ -318,16 +399,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       });
     }
 
-    const searchQuery = routingData.search_query || body.prompt;
+    const searchQuery = routingData.search_query || retrievalPrompt;
 
-    const [localHits, wikiHit, drugHit] = await Promise.all([
+    const [localHits, wikiHit, drugHit, formulaHits] = await Promise.all([
       runLibSqlSearch(searchQuery),
       fetchWikipediaSummary(searchQuery),
-      fetchApiMedicaments(searchQuery)
+      fetchApiMedicaments(searchQuery),
+      isFeatureEnabled("formulaBank")
+        ? searchClinicalFormulas(libsqlClient, searchQuery, 4)
+        : Promise.resolve([]),
     ]);
 
     const candidates: RankedCandidate[] = localHits.map((hit) => {
-      const agent = SADIQ_AGENTS.find((a) => a.silo === hit.category_silo) || SADIQ_AGENTS[0];
+      const agent = agentForSilo(hit.category_silo);
       return {
         id: hit.id,
         agent_id: agent.id,
@@ -349,8 +433,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (drugHit) {
       candidates.unshift(drugHit);
     }
+    if (formulaHits.length > 0) {
+      candidates.unshift(...formulaHits);
+    }
 
-    const finalContext = candidates.slice(0, 6);
+    const finalContext = candidates.slice(0, isFeatureEnabled("formulaBank") ? 10 : 6);
 
     return NextResponse.json({
       success: true,
