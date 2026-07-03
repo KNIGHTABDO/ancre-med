@@ -42,20 +42,22 @@ export default function LandingPage(): JSX.Element {
             <Link href="/changelog" className="nav-menu-link" onClick={() => setMobileMenuOpen(false)}>
               Changelog
             </Link>
-            <Link href="/terms" className="nav-menu-link" onClick={() => setMobileMenuOpen(false)}>
-              CGU
-            </Link>
-            <Link href="/privacy" className="nav-menu-link" onClick={() => setMobileMenuOpen(false)}>
-              Confidentialité
-            </Link>
           </nav>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="hero-section">
+      <section className="hero-section fade-in">
         <div className="hero-container">
-          <span className="hero-badge">Console RAG Clinique Haute-Attribution</span>
+          <div className="announcement-wrapper">
+            <Link href="/changelog" className="announcement-badge">
+              <span className="badge-pill">Nouveau</span>
+              <span className="badge-text">Propulsé par Gemini 3.5 Flash pour une validation clinique renforcée</span>
+              <svg className="badge-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="12" height="12">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
           <h1>
             L'intelligence médicale clinique, <br />
             <span className="text-teal">
@@ -113,7 +115,7 @@ export default function LandingPage(): JSX.Element {
               </g>
 
               {/* Arrow 1 */}
-              <path d="M170 210 L 210 210" stroke="#005c53" strokeWidth="2" strokeDasharray="4 3" />
+              <path d="M170 210 L 210 210" stroke="#005c53" strokeWidth="2" strokeDasharray="6 4" className="svg-flow-arrow" />
               <polygon points="210,207 217,210 210,213" fill="#005c53" />
 
               {/* Step 2: Agentic Router */}
@@ -126,12 +128,12 @@ export default function LandingPage(): JSX.Element {
               </g>
 
               {/* Branch 1: Conversational Bypass (Up) */}
-              <path d="M300 150 L 300 80 L 610 80" fill="none" stroke="#e67e22" strokeWidth="2" strokeDasharray="3 3" />
+              <path d="M300 150 L 300 80 L 610 80" fill="none" stroke="#e67e22" strokeWidth="2" strokeDasharray="5 3" className="svg-flow-arrow" />
               <polygon points="610,77 617,80 610,83" fill="#e67e22" />
               <text x="310" y="110" fill="#e67e22" fontSize="10" fontWeight="600">Dialogue direct (Bypass)</text>
 
               {/* Arrow 2 */}
-              <path d="M380 210 L 420 210" stroke="#005c53" strokeWidth="2" />
+              <path d="M380 210 L 420 210" stroke="#005c53" strokeWidth="2" strokeDasharray="6 4" className="svg-flow-arrow" />
               <polygon points="420,207 427,210 420,213" fill="#005c53" />
 
               {/* Step 3: Retrieval Sources */}
@@ -145,7 +147,7 @@ export default function LandingPage(): JSX.Element {
               </g>
 
               {/* Arrow 3 */}
-              <path d="M590 210 L 620 210" stroke="#005c53" strokeWidth="2" />
+              <path d="M590 210 L 620 210" stroke="#005c53" strokeWidth="2" strokeDasharray="6 4" className="svg-flow-arrow" />
               <polygon points="620,207 627,210 620,213" fill="#005c53" />
 
               {/* Step 4: Generation & Attributor */}
@@ -169,7 +171,7 @@ export default function LandingPage(): JSX.Element {
               </g>
 
               {/* Final Output label */}
-              <path d="M700 360 L 700 390 L 590 390" fill="none" stroke="#2ecc71" strokeWidth="2" />
+              <path d="M700 360 L 700 390 L 590 390" fill="none" stroke="#2ecc71" strokeWidth="2" strokeDasharray="6 4" className="svg-flow-arrow" />
               <polygon points="590,387 583,390 590,393" fill="#2ecc71" />
 
               <g transform="translate(420, 365)">
@@ -199,7 +201,7 @@ export default function LandingPage(): JSX.Element {
 
           <div className="features-grid">
             <article className="feature-card">
-              <div className="feature-icon">
+              <div className="feature-icon icon-teal">
                 <svg fill="none" height="24" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" width="24">
                   <ellipse cx="12" cy="5" rx="9" ry="3" />
                   <path d="M3 5v6c0 1.66 4 3 9 3s9-1.34 9-3V5M3 11v6c0 1.66 4 3 9 3s9-1.34 9-3v-6" />
@@ -212,7 +214,7 @@ export default function LandingPage(): JSX.Element {
             </article>
 
             <article className="feature-card">
-              <div className="feature-icon">
+              <div className="feature-icon icon-indigo">
                 <svg fill="none" height="24" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" width="24">
                   <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
                 </svg>
@@ -224,7 +226,7 @@ export default function LandingPage(): JSX.Element {
             </article>
 
             <article className="feature-card">
-              <div className="feature-icon">
+              <div className="feature-icon icon-emerald">
                 <svg fill="none" height="24" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" width="24">
                   <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
@@ -385,24 +387,69 @@ export default function LandingPage(): JSX.Element {
           z-index: 2;
         }
 
+        .hero-section {
+          padding: 80px 24px 60px;
+          text-align: center;
+          position: relative;
+          z-index: 2;
+        }
+
         .hero-container {
           max-width: 820px;
           margin: 0 auto;
         }
 
-        .hero-badge {
+        .announcement-wrapper {
+          display: flex;
+          justify-content: center;
+          margin-bottom: 28px;
+        }
+
+        .announcement-badge {
           display: inline-flex;
           align-items: center;
-          padding: 6px 14px;
-          background: rgba(0, 92, 83, 0.06);
-          border: 1px solid rgba(0, 92, 83, 0.14);
-          border-radius: 30px;
-          color: #005c53;
-          font-size: 11.5px;
+          gap: 10px;
+          padding: 5px 14px 5px 6px;
+          background: #ffffff;
+          border: 1px solid rgba(0, 92, 83, 0.12);
+          border-radius: 9999px;
+          text-decoration: none;
+          box-shadow: 0 2px 8px rgba(0, 92, 83, 0.03);
+          transition: all 200ms ease;
+        }
+
+        .announcement-badge:hover {
+          border-color: rgba(0, 92, 83, 0.28);
+          box-shadow: 0 4px 12px rgba(0, 92, 83, 0.06);
+          background: #fafdfc;
+        }
+
+        .badge-pill {
+          background: #005c53;
+          color: #ffffff;
+          font-size: 10px;
           font-weight: 700;
-          margin-bottom: 24px;
-          letter-spacing: 0.02em;
           text-transform: uppercase;
+          padding: 2.5px 8.5px;
+          border-radius: 9999px;
+          letter-spacing: 0.04em;
+        }
+
+        .badge-text {
+          font-family: ui-sans-serif, system-ui, sans-serif;
+          font-size: 12.5px;
+          font-weight: 600;
+          color: #21313a;
+          letter-spacing: -0.015em;
+        }
+
+        .badge-arrow {
+          color: #005c53;
+          transition: transform 180ms ease;
+        }
+
+        .announcement-badge:hover .badge-arrow {
+          transform: translateX(3px);
         }
 
         .hero-section h1 {
@@ -412,10 +459,9 @@ export default function LandingPage(): JSX.Element {
           color: #21313a;
           margin: 0 0 20px;
           letter-spacing: -0.02em;
-        }
-
-        .hero-section h1 .text-teal {
-          color: #005c53;
+          background: linear-gradient(135deg, #1a2a26 30%, #005c53 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
         }
 
         .hero-desc {
@@ -522,6 +568,17 @@ export default function LandingPage(): JSX.Element {
           height: auto;
         }
 
+        /* Animated flow arrows inside SVG */
+        .svg-flow-arrow {
+          animation: flow-dash 1.2s linear infinite;
+        }
+
+        @keyframes flow-dash {
+          to {
+            stroke-dashoffset: -20;
+          }
+        }
+
         /* Features section */
         .features-section {
           padding: 80px 24px;
@@ -569,11 +626,24 @@ export default function LandingPage(): JSX.Element {
           width: 44px;
           height: 44px;
           border-radius: 10px;
-          background: rgba(0, 92, 83, 0.06);
-          color: #005c53;
           display: grid;
           place-items: center;
           margin-bottom: 20px;
+        }
+
+        .icon-teal {
+          background: rgba(0, 92, 83, 0.06);
+          color: #005c53;
+        }
+
+        .icon-indigo {
+          background: rgba(59, 91, 219, 0.06);
+          color: #3b5bdb;
+        }
+
+        .icon-emerald {
+          background: rgba(46, 204, 113, 0.06);
+          color: #2ecc71;
         }
 
         .feature-card h3 {
@@ -588,6 +658,22 @@ export default function LandingPage(): JSX.Element {
           font-size: 13.5px;
           line-height: 1.6;
           color: #64716d;
+        }
+
+        /* Fade-in animations */
+        .fade-in {
+          animation: fade-in-anim 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        @keyframes fade-in-anim {
+          from {
+            opacity: 0;
+            transform: translateY(12px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
 
         /* Footer styling */

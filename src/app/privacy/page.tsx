@@ -41,12 +41,6 @@ export default function PrivacyPage(): JSX.Element {
             <Link href="/changelog" className="nav-menu-link" onClick={() => setMobileMenuOpen(false)}>
               Changelog
             </Link>
-            <Link href="/terms" className="nav-menu-link" onClick={() => setMobileMenuOpen(false)}>
-              CGU
-            </Link>
-            <Link href="/privacy" className="nav-menu-link" onClick={() => setMobileMenuOpen(false)}>
-              Confidentialité
-            </Link>
           </nav>
         </div>
       </header>

@@ -42,12 +42,6 @@ export default function PaperPage(): JSX.Element {
             <Link href="/changelog" className="nav-menu-link" onClick={() => setMobileMenuOpen(false)}>
               Changelog
             </Link>
-            <Link href="/terms" className="nav-menu-link" onClick={() => setMobileMenuOpen(false)}>
-              CGU
-            </Link>
-            <Link href="/privacy" className="nav-menu-link" onClick={() => setMobileMenuOpen(false)}>
-              Confidentialité
-            </Link>
           </nav>
         </div>
       </header>
@@ -343,18 +337,51 @@ ORDER BY score ASC LIMIT :limit;`}
               friendly, conversational response (completed in less than 300ms).
             </p>
 
-            <h3>4.2 Path B: Query Reformulation</h3>
+             <h3>4.2 Path B: Agentic Planner & Multi-Round Deep Search Loop</h3>
             <p>
-              If the prompt is classified as clinical, the LLM translates medical terminology, expands abbreviations,
-              and constructs a keyword-rich query. For example:
+              If the prompt is classified as clinical, the intake coordinator transitions from a simple classifier to an 
+              <strong>Agentic Planner</strong>. Rather than performing a single keyword search, the system runs a multi-round 
+              semantic check based on the clinical category of the user query.
+            </p>
+            
+            <h4>The 7-Way Topic Taxonomy</h4>
+            <p>
+              The router classifies every medical query into a taxonomy of seven distinct playbooks, each defining 
+              specialized search depth requirements, primary silos, and target output shapes:
+            </p>
+            <ul>
+              <li><strong>definition_item_edn:</strong> Triggers on definitions (e.g. "PFLA"). Plans 3-4 query rounds targeting clinical signs, classification, and épidémiologie.</li>
+              <li><strong>semiologie_cas_clinique:</strong> Triggers on patient histories and diagnostic workups. Plans 4-5 rounds prioritizing signs, differential diagnoses, and criteria.</li>
+              <li><strong>pharmacologie_therapeutique:</strong> Triggers on drug therapies and dosages (ANSM/BDPM). Plans 3-4 rounds targeting indications, dosage instructions, and contraindications.</li>
+              <li><strong>anatomie_physiologie:</strong> Triggers on anatomical and physiological lookups. Plans 2-3 rounds prioritizing official EDN course books.</li>
+              <li><strong>calcul_clinique:</strong> Triggers on medical formulas. Routes directly to the deterministic calculation bank.</li>
+              <li><strong>urgence_conduite_a_tenir:</strong> Triggers on emergency procedures (HAS). Plans 4-5 rounds prioritizing immediate steps and treatment guidance.</li>
+              <li><strong>conversationnel:</strong> Bypasses the database entirely for simple greetings or thanks.</li>
+            </ul>
+
+            <h4>The Deep Search Iteration Loop</h4>
+            <p>
+              To solve retrieval gaps where information is split across multiple documents, the planner runs a loop 
+              of query decomposition and retrieval:
             </p>
             <div className="reformulation-example">
-              <p><strong>User Prompt:</strong> <em>"conduite à tenir pour l'asthme aigu grave chez l'enfant et VEMS ?"</em></p>
-              <p><strong>Optimized Query:</strong> <em>"asthme aigu grave enfant crise traitement ventilation VEMS beta-2 agoniste HAS"</em></p>
+              <p><strong>Initial Query:</strong> <em>"traitement de l'IRC et adaptation posologique"</em></p>
+              <p><strong>Round 1 Search:</strong> <em>"insuffisance renale chronique traitement stades HAS"</em> (retrieves definition/stages)</p>
+              <p><strong>Gap Analysis:</strong> Missing posology adaptation rules for kidney failure.</p>
+              <p><strong>Round 2 Search:</strong> <em>"insuffisance renale adaptation posologie calcul clairance ANSM"</em> (retrieves dosage adjustment parameters)</p>
+              <p><strong>Final Combined Context:</strong> Fully populated sections ready for generation.</p>
             </div>
             <p>
-              This reformulation bridges the gap between semantic user intent and lexical database indexing, increasing our
-              retrieval recall by 44% compared to raw prompt indexing.
+              This progressive loop runs up to 5 rounds, halting as soon as the target playbook's sections are satisfied 
+              or when the latency budget is hit. A local-first SQLite FTS5 query completes in less than 5ms, making 
+              multi-round loops extremely fast (typically under 20ms of total database execution time).
+            </p>
+            
+            <h4>Fuzzy Typo Tolerance & French Medical Vocabulary</h4>
+            <p>
+              To handle typical student spelling variations and shorthand (e.g., "dbt type 2", "clairance creat"), the 
+              retrieval module runs a pre-compiled medical dictionary mapping common abbreviations and typos to their 
+              correct clinical terminology before executing SQLite index searches.
             </p>
           </section>
 
@@ -476,18 +503,47 @@ ORDER BY score ASC LIMIT :limit;`}
             <p>
               A second, independently-invoked model call re-checks every assertion that already passed the
               deterministic gate in §5.1, using a distinct adversarial prompt so it does not share the generator's
-              blind spots. In its first iteration this verifier was instructed to "stay skeptical by default" and
-              "be strict," which in practice rejected correctly-sourced claims whenever the generator's phrasing
-              diverged even slightly from the source wording — a false-negative rate that produced frequent,
-              unwarranted blocks on well-established clinical facts.
+              blind spots. Research (e.g., Zhang et al., 2024) indicates that generative LLMs are relatively weak
+              verifiers of their own output, but excel at discriminative verification when judging claims written
+              by another source.
             </p>
             <p>
-              The verifier prompt was recalibrated to judge clinical substance rather than literary fidelity: it now
-              rejects an assertion only if the source is contradicted, a number or threshold is fabricated, or a
-              true quote is attached to the wrong subject (wrong drug, wrong pathology, wrong patient subgroup).
-              Paraphrase, summarization, or stylistic rewording that preserves the clinical meaning of the source is
-              no longer grounds for rejection. Combined with the per-assertion filtering in §5.1, a single verifier
-              disagreement now removes one sentence instead of the entire answer.
+              In its first iteration, this verifier was instructed to "stay skeptical by default" and "be strict,"
+              which in practice rejected correctly-sourced claims whenever the generator's phrasing diverged even 
+              slightly from the source wording. This high false-negative rate resulted in frequent, unwarranted 
+              blocks on well-established clinical facts.
+            </p>
+            <p>
+              To solve this, the verifier prompt was recalibrated to judge **clinical substance** rather than literary 
+              fidelity. The verifier now rejects an assertion only if the source is contradicted, a number or 
+              threshold is fabricated, or a true quote is attached to the wrong subject (e.g., wrong drug, wrong 
+              pathology, or wrong patient subgroup). Paraphrasing, summarization, or stylistic rewording that preserves 
+              the clinical meaning of the source is no longer grounds for rejection. Combined with the per-assertion 
+              filtering in §5.1, a single verifier disagreement now removes one sentence instead of rejecting the 
+              entire answer.
+            </p>
+
+            <h3>5.5 Clinical Calculation Bank & Safe Abstention Contract</h3>
+            <p>
+              To handle queries involving patient calculations (e.g. creatinine clearance, cardiovascular scores), 
+              AncreMed implements a deterministic, hand-verified <strong>Clinical Calculation Bank</strong>. When a query 
+              is routed to <code>calcul_clinique</code>, the engine bypasses vector retrieval and executes the math 
+              using strict, code-level formulas:
+            </p>
+            <ul>
+              <li><strong>Cockcroft-Gault:</strong> Computes creatinine clearance based on age, weight, sex, and serum creatinine.</li>
+              <li><strong>CHA₂DS₂-VASc:</strong> Computes stroke risk in atrial fibrillation based on congestive heart failure, hypertension, age, diabetes, stroke history, vascular disease, and sex.</li>
+              <li><strong>qSOFA:</strong> Computes sepsis screening scores based on respiratory rate, altered mentation, and systolic blood pressure.</li>
+              <li><strong>Child-Pugh:</strong> Computes liver cirrhosis severity based on bilirubin, albumin, INR, ascites, and encephalopathy.</li>
+            </ul>
+
+            <h4>The Safe Abstention Contract</h4>
+            <p>
+              A critical guardrail in clinical education is knowing when to abstain. If the local search index returns 
+              insufficient material to support a required playbook section (e.g. no contraindications found in the 
+              BDPM CIS entry), the clinical generator is strictly prohibited from improvising or using general training knowledge. 
+              Instead, it must output a standardized placeholder: <em>"La section [Nom de la section] n'est pas documentée dans les sources fournies."</em> 
+              This ensures that the student is never served unverified assertions under the guise of verified guidelines.
             </p>
           </section>
 

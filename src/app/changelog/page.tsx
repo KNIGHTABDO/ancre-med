@@ -41,12 +41,6 @@ export default function ChangelogPage(): JSX.Element {
             <Link href="/changelog" className="nav-menu-link" onClick={() => setMobileMenuOpen(false)}>
               Changelog
             </Link>
-            <Link href="/terms" className="nav-menu-link" onClick={() => setMobileMenuOpen(false)}>
-              CGU
-            </Link>
-            <Link href="/privacy" className="nav-menu-link" onClick={() => setMobileMenuOpen(false)}>
-              Confidentialité
-            </Link>
           </nav>
         </div>
       </header>
@@ -57,6 +51,52 @@ export default function ChangelogPage(): JSX.Element {
           <p className="subtitle">Suivez l'évolution technique et clinique du moteur AncreMed.</p>
 
           <div className="changelog-list">
+            {/* Version 2.2.0 */}
+            <section className="changelog-item">
+              <div className="changelog-meta">
+                <span className="version-badge">v2.2.0</span>
+                <time className="changelog-date">Juil. 3, 2026</time>
+              </div>
+              <div className="changelog-details">
+                <h2>Interface v2 & Résolution FOUC : Refonte UI/UX Premium et Intégration SSR</h2>
+                <p>
+                  Cette mise à jour apporte une refonte visuelle majeure et résout les problèmes de
+                  rendu initial pour aligner l'expérience utilisateur sur les standards de production
+                  des leaders de l'industrie (OpenAI, Anthropic).
+                </p>
+                <ul>
+                  <li>
+                    <strong>Intégration SSR des styles (Zéro FOUC) :</strong> Résolution du problème de
+                    <em> Flash of Unstyled Content</em> (FOUC) sur l'ensemble des pages. Nous avons intégré
+                    un registre <code>StyledJsxRegistry</code> pour collecter et injecter les styles CSS lors du
+                    Server-Side Rendering (SSR) dans le layout global de Next.js, garantissant une première
+                    peinture parfaitement stylée sur chaque rechargement.
+                  </li>
+                  <li>
+                    <strong>Console de saisie intelligente :</strong> Remplacement du champ de saisie simple par un
+                    composant <code>&lt;textarea&gt;</code> auto-extensible qui s'adapte dynamiquement à la longueur du texte
+                    jusqu'à 160px de haut. Gestion optimisée des touches <code>Enter</code> (envoi) et <code>Shift+Enter</code> (saut de ligne),
+                    et centrage vertical automatique sur une seule ligne.
+                  </li>
+                  <li>
+                    <strong>Barre latérale compacte et esthétique :</strong> Réorganisation de l'en-tête de la barre latérale.
+                    Le bouton "Nouvelle discussion" et le bouton de repliage sont désormais disposés côte à côte sur une seule ligne,
+                    libérant un espace vertical précieux pour l'historique et affinant l'équilibre esthétique du panneau.
+                  </li>
+                  <li>
+                    <strong>Écran de chargement sémantique et checkpoints :</strong> Implémentation d'un indicateur de progression
+                    étape par étape lors de la génération (recherche d'index, analyse de sources, rédaction clinique, vérification d'assertions)
+                    couplé à des squelettes de texte pulsants pour une rétroaction visuelle fluide.
+                  </li>
+                  <li>
+                    <strong>Améliorations de confort et sécurité :</strong> Ajout d'une boîte de dialogue de confirmation avant la suppression
+                    de discussions, bouton de retour automatique en bas de page, possibilité de copier les réponses cliniques en un clic, et
+                    remplacement des identifiants bruts de base de données par des badges de source colorés (HAS, ANSM / VIDAL, EDN).
+                  </li>
+                </ul>
+              </div>
+            </section>
+
             {/* Version 2.1.0 */}
             <section className="changelog-item">
               <div className="changelog-meta">
