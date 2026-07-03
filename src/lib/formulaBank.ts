@@ -105,8 +105,8 @@ function formulaToContextChunk(
     page: null,
     date: formula.verified_date,
     silo: "clinical_formulas",
-    qdrant_score: -score,
-    cosine_similarity: 1,
+    fts_rank: -score,
+    bm25_score: 1,
     section: "formule",
   };
 }

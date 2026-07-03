@@ -52,7 +52,7 @@ interface GapCheckerPayload {
   readonly gap_queries?: unknown;
 }
 
-const PLANNER_MODEL = "gemini-3.1-flash-lite";
+const PLANNER_MODEL = "gemini-3.5-flash";
 const DEFAULT_MAX_ROUNDS = 3;
 const DEFAULT_PER_QUERY_LIMIT = 6;
 
@@ -116,6 +116,14 @@ médicale toi-même — tu prépares uniquement le plan de recherche.
    pharmacologie_therapeutique, anatomie_physiologie, calcul_clinique,
    urgence_conduite_a_tenir, conversationnel. Ajoute une secondary_class si la question
    en couvre clairement deux.
+   N'utilise "conversationnel" QUE si le message n'a AUCUN contenu clinique : simple
+   salutation, remerciement, au revoir ou bavardage. Dès qu'il y a un contenu clinique,
+   pharmacologique ou d'étude médicale, choisis une classe médicale — même si le message
+   est très court, en style SMS, mal orthographié, ou une relance brève. Exemples :
+   - "c koi le ttt" -> pharmacologie_therapeutique (pas conversationnel)
+   - "et pour la grossesse ?" -> pharmacologie_therapeutique / semiologie_cas_clinique
+   - "dfg a 40 je fais quoi" -> calcul_clinique / urgence_conduite_a_tenir
+   - "bonjour" / "merci" -> conversationnel
 2. Si conversationnel : sub_queries = [].
 3. Sinon, génère 2 à 5 sous-requêtes, chacune ciblant UNE SEULE section du plan de
    réponse de cette catégorie. Chaque sous-requête : français, dense en mots-clés
@@ -277,7 +285,7 @@ function fallbackPlan(prompt: string): RetrievalPlan {
   const primaryClass = topicClassFromPrompt(prompt);
   const secondaryClass =
     primaryClass !== "calcul_clinique" &&
-    /\b(adapt|clairance|posologie|dose|renal|renale|dfg|irc)\b/iu.test(normalizeKey(prompt))
+      /\b(adapt|clairance|posologie|dose|renal|renale|dfg|irc)\b/iu.test(normalizeKey(prompt))
       ? "calcul_clinique"
       : null;
   const playbook = PLAYBOOKS[primaryClass];
@@ -371,8 +379,8 @@ function mapRowToContextChunk(
     page: readNumber(row, "page_number"),
     date: readString(row, "regulatory_date"),
     silo,
-    qdrant_score: readNumber(row, "score") ?? 0,
-    cosine_similarity: 1,
+    fts_rank: readNumber(row, "score") ?? 0,
+    bm25_score: 1,
     section,
   };
 }
@@ -457,7 +465,7 @@ export async function runFtsSearch(
     });
     return response.rows.map((row, index) => ({
       ...mapRowToContextChunk(row, section, index),
-      qdrant_score: -1 * index,
+      fts_rank: -1 * index,
     }));
   } catch (error: unknown) {
     console.error("Deep-search LIKE fallback failed:", error);
@@ -641,11 +649,11 @@ export async function deepSearch(options: DeepSearchOptions): Promise<DeepSearch
       heuristicGaps.length > 0
         ? heuristicGaps
         : await checkCoverageGapsWithLlm(
-            options.aiStudio,
-            plan,
-            coveredSectionNames,
-            Array.from(usedQueries),
-          );
+          options.aiStudio,
+          plan,
+          coveredSectionNames,
+          Array.from(usedQueries),
+        );
   }
 
   const injectedContext = Array.from(sectionsCovered.values())
@@ -683,8 +691,8 @@ export function conversationalContext(): readonly RetrievedContextChunk[] {
       page: null,
       date: null,
       silo: "chat",
-      qdrant_score: 1,
-      cosine_similarity: 1,
+      fts_rank: 1,
+      bm25_score: 1,
       section: "conversationnel",
     },
   ];

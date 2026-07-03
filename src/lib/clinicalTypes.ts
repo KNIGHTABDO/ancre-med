@@ -41,8 +41,8 @@ export interface RetrievedContextChunk {
   readonly page: number | null;
   readonly date: string | null;
   readonly silo: CategorySilo | string | null;
-  readonly qdrant_score: number;
-  readonly cosine_similarity: number;
+  readonly fts_rank: number;
+  readonly bm25_score: number;
   readonly section?: string;
 }
 

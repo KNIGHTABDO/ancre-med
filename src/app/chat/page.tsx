@@ -16,8 +16,8 @@ interface RetrievedContextChunk {
   readonly page: number | null;
   readonly date: string | null;
   readonly silo: string | null;
-  readonly qdrant_score: number;
-  readonly cosine_similarity: number;
+  readonly fts_rank: number;
+  readonly bm25_score: number;
   readonly section?: string;
 }
 
@@ -319,8 +319,8 @@ function parseContextChunk(value: unknown, index: number): RetrievedContextChunk
     page: readNullableNumber(value, "page"),
     date: readNullableString(value, "date"),
     silo: readNullableString(value, "silo"),
-    qdrant_score: readRequiredNumber(value, "qdrant_score"),
-    cosine_similarity: readRequiredNumber(value, "cosine_similarity"),
+    fts_rank: readRequiredNumber(value, "fts_rank"),
+    bm25_score: readRequiredNumber(value, "bm25_score"),
     ...(section !== null ? { section } : {}),
   };
 }

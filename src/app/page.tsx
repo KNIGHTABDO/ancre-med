@@ -15,9 +15,9 @@ export default function LandingPage(): JSX.Element {
           <Link href="/" className="logo-brand">
             AncreMed
           </Link>
-          
-          <button 
-            className="mobile-menu-toggle" 
+
+          <button
+            className="mobile-menu-toggle"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle menu"
           >
@@ -65,8 +65,8 @@ export default function LandingPage(): JSX.Element {
             </span>
           </h1>
           <p className="hero-desc">
-            Interrogez en temps réel 76 303 fiches issues des référentiels de la <strong>Haute Autorité de Santé (HAS)</strong>, 
-            de la <strong>Base des Médicaments (ANSM)</strong> et du <strong>Collège des Enseignants (EDN)</strong>. 
+            Interrogez en temps réel 76 303 fiches issues des référentiels de la <strong>Haute Autorité de Santé (HAS)</strong>,
+            de la <strong>Base des Médicaments (ANSM)</strong> et du <strong>Collège des Enseignants (EDN)</strong>.
             {qualityPolishEnabled
               ? " Chaque affirmation chiffrée est vérifiée mot à mot et par un second modèle indépendant contre le texte source."
               : " Une double valve d'attribution vérifie chaque fait mot à mot."}
@@ -122,7 +122,7 @@ export default function LandingPage(): JSX.Element {
                 <text x="80" y="32" textAnchor="middle" fill="#ffffff" fontSize="13" fontWeight="600">Routeur IA Agentic</text>
                 <text x="80" y="55" textAnchor="middle" fill="rgba(255,255,255,0.8)" fontSize="11">Classification &</text>
                 <text x="80" y="70" textAnchor="middle" fill="rgba(255,255,255,0.8)" fontSize="11">Reformulation</text>
-                <text x="80" y="95" textAnchor="middle" fill="#2ecc71" fontSize="10" fontWeight="700">Gemini-3.1-Flash-Lite</text>
+                <text x="80" y="95" textAnchor="middle" fill="#2ecc71" fontSize="10" fontWeight="700">gemini-3.5-flash</text>
               </g>
 
               {/* Branch 1: Conversational Bypass (Up) */}
@@ -153,7 +153,7 @@ export default function LandingPage(): JSX.Element {
                 <rect width="140" height="310" rx="12" fill="#ffffff" stroke="rgba(134,148,144,0.3)" strokeWidth="1" />
                 <text x="70" y="32" textAnchor="middle" fill="#21313a" fontSize="13" fontWeight="700">Attribution</text>
                 <text x="70" y="48" textAnchor="middle" fill="#005c53" fontSize="11" fontWeight="600">Valve Clinique</text>
-                
+
                 <rect x="15" y="75" width="110" height="50" rx="6" fill="#f1fcf9" stroke="rgba(0,92,83,0.18)" />
                 <text x="70" y="93" textAnchor="middle" fill="#005c53" fontSize="10" fontWeight="700">1. Génération</text>
                 <text x="70" y="108" textAnchor="middle" fill="#5c6a6f" fontSize="9">Gemini Flash-Lite</text>
@@ -171,7 +171,7 @@ export default function LandingPage(): JSX.Element {
               {/* Final Output label */}
               <path d="M700 360 L 700 390 L 590 390" fill="none" stroke="#2ecc71" strokeWidth="2" />
               <polygon points="590,387 583,390 590,393" fill="#2ecc71" />
-              
+
               <g transform="translate(420, 365)">
                 <rect width="150" height="50" rx="8" fill="#e8f8f5" stroke="#2ecc71" strokeWidth="1" />
                 <text x="75" y="22" textAnchor="middle" fill="#27ae60" fontSize="11" fontWeight="700">Réponse validée 200</text>
@@ -181,7 +181,7 @@ export default function LandingPage(): JSX.Element {
               <path d="M700 360 L 700 390 L 730 390 L 730 400" fill="none" stroke="#c0392b" strokeWidth="1.5" strokeDasharray="3 2" />
               <polygon points="727,400 730,405 733,400" fill="#c0392b" />
               <text x="740" y="398" fill="#c0392b" fontSize="9" fontWeight="600">Dérive factuelle</text>
-              
+
               <g transform="translate(680, 407)">
                 <rect width="105" height="15" rx="3" fill="#fff8f8" stroke="#c0392b" strokeWidth="0.5" />
                 <text x="52.5" y="10" textAnchor="middle" fill="#c0392b" fontSize="8" fontWeight="600">Bloqué (Valve 422)</text>

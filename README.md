@@ -10,7 +10,7 @@ By indexing 76,303 pre-processed medical records from the Haute Autorité de San
 
 ## Key Features
 
-- **Agentic Query Router:** Uses `gemini-3.1-flash-lite` to classify incoming prompts by topic — bypassing DB search for conversational queries and reformulating clinical terms (expanding abbreviations, translating acronyms) to maximize search recall.
+- **Agentic Query Router:** Uses `gemini-3.5-flash` to classify incoming prompts by topic — bypassing DB search for conversational queries and reformulating clinical terms (expanding abbreviations, translating acronyms) to maximize search recall.
 - **Multi-Round Deep Search:** A bounded planner loop (`ANCREMED_V2_DEEP_SEARCH`) issues targeted FTS5/BM25 sub-queries per topic playbook, tracks section coverage, and stops once the required sections are covered or a round limit is hit.
 - **Full-Text Search (FTS5):** Local SQLite FTS5 search via libSQL/Turso, typically returning matches in single-digit milliseconds.
 - **Live Medical APIs:** Augments local context with real-time data from Wikipedia FR and the French National Drug Database API (api-medicaments.fr).
@@ -32,7 +32,7 @@ By indexing 76,303 pre-processed medical records from the Haute Autorité de San
                                 ▼
                     ┌────────────────────────┐
                     │  Agentic Query Router  │
-                    │ (Gemini-3.1-Flash-Lite)│
+                    │ (gemini-3.5-flash)│
                     └───────┬────────────┬───┘
                             │            │
              (Conversational│            │(Clinical Query)

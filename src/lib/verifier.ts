@@ -19,7 +19,7 @@ export interface VerifierDecision {
   readonly reason: string;
 }
 
-const VERIFIER_MODEL = "gemini-3.1-flash-lite";
+const VERIFIER_MODEL = "gemini-3.5-flash";
 
 const verifierSchema: Schema = {
   type: Type.OBJECT,

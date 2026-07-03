@@ -51,7 +51,7 @@
 Read before touching anything else. These are guardrails for the coding agent — do not "fix" them.
 
 1. **No vector database. No embedding model.** Stay on SQLite/Turso FTS5, `unicode61` tokenizer, BM25 ranking. Every improvement here sits *on top of* lexical search, never instead of it.
-2. **Stay cheap.** `gemini-3.1-flash-lite` remains the workhorse for routing, planning, gap-checking, and verification. Reserve the larger/more expensive generation call for the final answer pass only.
+2. **Stay cheap.** `gemini-3.5-flash` remains the workhorse for routing, planning, gap-checking, and verification. Reserve the larger/more expensive generation call for the final answer pass only.
 3. **Stay local-first wherever a problem can be solved without an LLM call.** Deterministic dictionaries and SQL beat an extra model round-trip.
 4. **Never relax the no-hallucination guarantee to produce "more words."** Every fix below adds depth by giving the generator more *real* retrieved material and more *room* to explain it — never by loosening verification on the facts that matter (dosages, contraindications, named recommendations, numbers).
 5. **Every formula or score in the calculation bank must be sourced from an authoritative reference and manually verified before going live.** Do not let an LLM — including the one that wrote this spec — populate it from memorized training data. §6 gives four fully-verified worked examples specifically so the agent has a correct pattern to copy; it should not extend the bank past those without the same verification step.
@@ -113,7 +113,7 @@ interface RetrievalPlan {
 
 ```ts
 async function deepSearch(userPrompt: string): Promise<RetrievedContext> {
-  const plan = await planQuery(userPrompt); // gemini-3.1-flash-lite, see §3.5
+  const plan = await planQuery(userPrompt); // gemini-3.5-flash, see §3.5
   const usedQueries = new Set<string>();
   const foundChunkIds = new Set<string>();
   const sectionsCovered = new Map<string, ChunkRow[]>();
@@ -457,7 +457,7 @@ This turns §4.2's `stale_source` flag from a reactive patch into something the 
 
 ## 9. Cost & Latency Budget
 
-Real pricing for `gemini-3.1-flash-lite` (confirmed current): **$0.25 / million input tokens, $1.50 / million output tokens**. This table prices the new orchestration calls this spec adds — planner, gap-checker, verifier — since that's the model you've confirmed you're already using for routing. Your existing generation call's cost depends on whichever model actually powers it, which isn't confirmed here; plug it into the same row structure once you know.
+Real pricing for `gemini-3.5-flash` (confirmed current): **$0.25 / million input tokens, $1.50 / million output tokens**. This table prices the new orchestration calls this spec adds — planner, gap-checker, verifier — since that's the model you've confirmed you're already using for routing. Your existing generation call's cost depends on whichever model actually powers it, which isn't confirmed here; plug it into the same row structure once you know.
 
 | `topic_class` | New LLM calls added | Approx tokens (in/out) | Approx added cost/query | Target p95 latency |
 |---|---|---|---|---|

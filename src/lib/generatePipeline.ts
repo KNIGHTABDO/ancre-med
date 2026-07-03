@@ -1,11 +1,22 @@
 import { GoogleGenAI, Type, type Schema } from "@google/genai";
 import { createClient } from "@libsql/client";
-import { NextRequest, NextResponse } from "next/server";
 
 import { isFeatureEnabled } from "@/lib/featureFlags";
 import { writeQueryLog, type QueryLogInput } from "@/lib/queryLogs";
 import { getCachedResponse, storeCachedResponse, type CachedResponsePayload } from "@/lib/responseCache";
 import { verifyClinicalAssertions, type VerifierAssertion } from "@/lib/verifier";
+
+export interface PipelineResult {
+  readonly status: number;
+  readonly body: Record<string, unknown>;
+}
+
+export interface GeneratePipelineHooks {
+  /** Fired when the deterministic gate has passed and the semantic verifier is about to run. */
+  readonly onVerifying?: () => void;
+  /** Fired when a cached response is served (no Gemini call happened). */
+  readonly onCacheHit?: () => void;
+}
 
 const GENERATION_MODEL = "gemini-3.5-flash";
 const ATTRIBUTION_CONFIDENCE_THRESHOLD = 0.85;
@@ -489,11 +500,6 @@ function parseMedicalResponsePayload(value: unknown): MedicalResponsePayload {
   };
 }
 
-/**
- * A single malformed span (missing an attribution field, an empty quote, an
- * unknown type) should never take down the whole answer -- we drop just that
- * span and keep everything else. Returns null for anything unusable.
- */
 function parseResponseSpan(value: unknown, index: number): ResponseSpan | null {
   if (!isRecord(value)) {
     console.warn(`response_spans[${index}] is not an object; dropping span.`);
@@ -619,7 +625,7 @@ function runAttributionGate(
 function normalizeIdentifier(value: string | null): string {
   return normalizeForIncludes(value ?? "")
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[̀-ͯ]/g, "")
     .replace(/\s+/g, " ");
 }
 
@@ -658,10 +664,6 @@ function subjectEntityMatchesChunk(
   return normalizedSource.length > 0 && normalizedSourceUrn === normalizedSource;
 }
 
-// A source excerpt phrased as a question, QCM/MCQ stem, or heading is not
-// semantic support for a clinical claim -- quoting « Quel est le traitement ? »
-// proves nothing. Reject such quotes so the assertion is dropped instead of
-// rendered with a bogus citation.
 const QUESTION_QUOTE_PATTERN = /^(quel(le)?s? |que |comment |pourquoi )/i;
 
 function quoteIsNonFactual(quote: string): boolean {
@@ -717,13 +719,6 @@ function runSpanAttributionGate(
   };
 }
 
-/**
- * A clinical answer is usable as long as the student is left with *something*
- * honest: real narrative text, at least one word-for-word verified assertion,
- * or an explicit abstention. We only refuse the whole response when none of
- * those exist -- individual failed assertions are dropped silently instead of
- * nuking an otherwise-correct answer (see `filterSpansForRendering`).
- */
 function hasRenderableContent(
   spans: readonly ResponseSpan[],
   verifiedAssertionIds: ReadonlySet<string>,
@@ -751,18 +746,6 @@ function filterSpansForRendering(
   });
 }
 
-/**
- * LEGACY WHOLE-RESPONSE GATE -- behavior differs sharply from the span gate.
- *
- * This path (reached only when ANCREMED_V2_GATE_SPANS=false) rejects the ENTIRE
- * response whenever fewer than MINIMUM_VERIFIED_ASSERTION_RATIO of its assertions
- * verify, instead of silently dropping the individual unverified assertions the
- * way the span gate (`runSpanAttributionGate` + `hasRenderableContent`) does.
- * Flipping ANCREMED_V2_GATE_SPANS=false therefore reverts to strict, all-or-
- * nothing blocking and will refuse many answers the span gate would happily
- * render with a subset of well-attributed claims. Keep both behaviors in mind
- * before touching this function.
- */
 function shouldRejectAttribution(result: VerificationResult, totalAssertions: number): boolean {
   if (totalAssertions === 0) {
     return true;
@@ -941,11 +924,6 @@ function enforceRequiredAbstentions(
   };
 }
 
-// A calcul_clinique answer that stops at the formula or the numeric
-// substitution -- without ever stating the resolved result -- is clinically
-// useless. If no span carries a computed numeric result (e.g. "= 72 mL") and no
-// resultat/interpretation abstention already exists, inject one so the student
-// is told the calculation is incomplete rather than shown a dangling formula.
 const RESOLVED_NUMERIC_RESULT_PATTERN = /=\s*\d+([.,]\d+)?\s*\w/;
 
 function enforceCalculResult(
@@ -1091,22 +1069,16 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Unknown generation failure.";
 }
 
-function jsonResponse(payload: Record<string, unknown>, status: number): NextResponse {
-  return NextResponse.json(payload, {
-    status,
-    headers: {
-      "Cache-Control": "no-store",
-    },
-  });
-}
-
-export async function POST(request: NextRequest): Promise<NextResponse> {
+export async function runGeneratePipeline(
+  rawBody: unknown,
+  hooks?: GeneratePipelineHooks,
+): Promise<PipelineResult> {
   let body: GenerateRequestBody;
   try {
-    body = parseGenerateRequestBody(await request.json());
+    body = parseGenerateRequestBody(rawBody);
     body = prioritizeFormulaBankForCalculations(body);
   } catch (error: unknown) {
-    return jsonResponse({ success: false, error: errorMessage(error) }, 400);
+    return { status: 400, body: { success: false, error: errorMessage(error) } };
   }
 
   try {
@@ -1125,15 +1097,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           body.retrievalPlan,
         );
         if (cached !== null) {
-          return jsonResponse(
-            {
+          hooks?.onCacheHit?.();
+          return {
+            status: 200,
+            body: {
               success: true,
               model: cached.model,
               cached: true,
               payload: cached.payload,
             },
-            200,
-          );
+          };
         }
       }
 
@@ -1170,17 +1143,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       let verifierReasons: readonly string[] = [];
       let estimatedCostUsd = estimateGeminiFlashLiteCostUsd(spanPrompt, responseText);
 
-      // Run the independent semantic verifier whenever the freshness flag is on
-      // and the response contains any clinical_assertion spans -- passing gate 1
-      // is NOT a precondition for the semantic check. The verifier still only
-      // scores the assertions that cleared the deterministic substring/entity
-      // gate (there is nothing renderable to keep otherwise), and it only ever
-      // drops the specific assertion it disagrees with, never the whole answer.
       if (
         isFeatureEnabled("verifierFreshness") &&
         !isConversational &&
         clinicalSpans(parsedPayload).length > 0
       ) {
+        hooks?.onVerifying?.();
         const gateVerifiedIds = new Set(
           verificationResult.verifiedAssertions.map((assertion) => assertion.assertion_id),
         );
@@ -1211,10 +1179,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       const droppedAssertionCount = totalAssertionCount - finalVerifiedAssertions.length;
       const failedVerifierCount = verifierFailedIds.size;
 
-      // The only case that still nukes the whole response: nothing usable
-      // survived at all (no verified claim, no honest abstention, no plain
-      // narrative text). That is a genuine generation failure, not a single
-      // disputed sentence.
       const shouldBlock =
         !isConversational && !hasRenderableContent(parsedPayload.response_spans, finalVerifiedIds);
 
@@ -1232,8 +1196,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
 
       if (shouldBlock) {
-        return jsonResponse(
-          {
+        return {
+          status: 422,
+          body: {
             success: false,
             error:
               "Le système n'a trouvé aucune affirmation vérifiable ni aucune section à signaler comme non couverte pour cette question. Reformulez votre question ou précisez le contexte clinique.",
@@ -1248,8 +1213,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
               minimum_confidence_score: ATTRIBUTION_CONFIDENCE_THRESHOLD,
             },
           },
-          422,
-        );
+        };
       }
 
       const renderedSpans = filterSpansForRendering(parsedPayload.response_spans, finalVerifiedIds);
@@ -1299,14 +1263,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         });
       }
 
-      return jsonResponse(
-        {
+      return {
+        status: 200,
+        body: {
           success: true,
           model: responseEnvelope.model,
           payload: responseEnvelope.payload,
         },
-        200,
-      );
+      };
     }
 
     const response = await aiStudio.models.generateContent({
@@ -1328,8 +1292,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const parsedPayload = parseGeminiJson(responseText);
 
     if (isConversational) {
-      return jsonResponse(
-        {
+      return {
+        status: 200,
+        body: {
           success: true,
           model: GENERATION_MODEL,
           payload: {
@@ -1340,8 +1305,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             dropped_assertion_count: 0,
           },
         },
-        200,
-      );
+      };
     }
 
     const verificationResult = runAttributionGate(parsedPayload, body.retrievedContext);
@@ -1352,8 +1316,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         parsedPayload.clinical_assertions.length,
       )
     ) {
-      return jsonResponse(
-        {
+      return {
+        status: 422,
+        body: {
           success: false,
           error:
             "Le système a détecté une dérive factuelle potentielle. La réponse a été bloquée par la valve de revue clinique.",
@@ -1364,12 +1329,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             minimum_confidence_score: ATTRIBUTION_CONFIDENCE_THRESHOLD,
           },
         },
-        422,
-      );
+      };
     }
 
-    return jsonResponse(
-      {
+    return {
+      status: 200,
+      body: {
         success: true,
         model: GENERATION_MODEL,
         payload: {
@@ -1380,9 +1345,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           dropped_assertion_count: verificationResult.droppedAssertions.length,
         },
       },
-      200,
-    );
+    };
   } catch (error: unknown) {
-    return jsonResponse({ success: false, error: errorMessage(error) }, 502);
+    return { status: 502, body: { success: false, error: errorMessage(error) } };
   }
 }
