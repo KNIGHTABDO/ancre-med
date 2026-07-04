@@ -1,54 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
 import type { JSX } from "react";
+import { SiteHeader } from "../../components/SiteHeader";
+import { SiteFooter } from "../../components/SiteFooter";
 
 export default function ChangelogPage(): JSX.Element {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   return (
     <main className="changelog-shell">
-      {/* Navigation Header */}
-      <header className={`app-global-header ${mobileMenuOpen ? "mobile-menu-active" : ""}`}>
-        <div className="header-container">
-          <Link href="/" className="logo-brand">
-            AncreMed
-          </Link>
-          
-          <button 
-            className="mobile-menu-toggle" 
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle menu"
-          >
-            {mobileMenuOpen ? (
-              <svg fill="none" height="24" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" width="24">
-                <path d="M18 6L6 18M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg fill="none" height="24" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" width="24">
-                <path d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            )}
-          </button>
+      <SiteHeader />
 
-          <nav className="header-nav-menu">
-            <Link href="/chat" className="nav-menu-link highlight-btn" onClick={() => setMobileMenuOpen(false)}>
-              Console Clinique
-            </Link>
-            <Link href="/paper" className="nav-menu-link" onClick={() => setMobileMenuOpen(false)}>
-              Rapport Scientifique
-            </Link>
-            <Link href="/changelog" className="nav-menu-link" onClick={() => setMobileMenuOpen(false)}>
-              Changelog
-            </Link>
-          </nav>
-        </div>
-      </header>
-
-      <div className="changelog-viewport">
+      <div className="changelog-viewport fade-up">
         <div className="changelog-container">
-          <h1>Journal des Modifications (Changelog)</h1>
-          <p className="subtitle">Suivez l'évolution technique et clinique du moteur AncreMed.</p>
+          <h1>Changelog</h1>
+          <p className="subtitle">L’évolution technique et clinique du moteur AncreMed.</p>
 
           <div className="changelog-list">
             {/* Version 2.2.0 */}
@@ -244,219 +208,112 @@ export default function ChangelogPage(): JSX.Element {
         </div>
       </div>
 
+      <SiteFooter />
+
       <style jsx global>{`
         .changelog-shell {
-          background: #fbfcfb;
-          color: #21313a;
+          background: var(--bg);
           min-height: 100vh;
-          font-family: ui-sans-serif, system-ui, sans-serif;
-        }
-        .app-global-header {
-          position: sticky;
-          top: 0;
-          left: 0;
-          right: 0;
-          height: 64px;
-          border-bottom: 1px solid rgba(134, 148, 144, 0.16);
-          background: rgba(251, 252, 251, 0.92);
-          backdrop-filter: blur(16px);
-          z-index: 100;
-        }
-
-        .header-container {
-          height: 100%;
           display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0 24px;
-          position: relative;
-        }
-
-        .logo-brand {
-          font-size: 20px;
-          font-weight: 760;
-          color: #005c53;
-          text-decoration: none;
-          letter-spacing: -0.015em;
-        }
-
-        .mobile-menu-toggle {
-          display: none;
-          background: transparent;
-          border: 0;
-          color: #005c53;
-          cursor: pointer;
-          padding: 6px;
-          border-radius: 8px;
-          align-items: center;
-          justify-content: center;
-          transition: background 160ms ease;
-        }
-
-        .mobile-menu-toggle:hover {
-          background: rgba(0, 92, 83, 0.08);
-        }
-
-        .header-nav-menu {
-          display: flex;
-          align-items: center;
-          gap: 24px;
-        }
-
-        .nav-menu-link {
-          font-size: 13.5px;
-          font-weight: 600;
-          color: #4a5553;
-          text-decoration: none;
-          transition: color 160ms ease;
-        }
-
-        .nav-menu-link:hover {
-          color: #005c53;
-        }
-
-        .highlight-btn {
-          background: #005c53;
-          color: #ffffff;
-          padding: 8px 16px;
-          border-radius: 8px;
-          box-shadow: 0 4px 12px rgba(0, 92, 83, 0.14);
-          transition: all 180ms ease;
-        }
-
-        .highlight-btn:hover {
-          background: #064c45;
-          color: #ffffff;
-          box-shadow: 0 6px 16px rgba(0, 92, 83, 0.18);
-        }
-
-        @media (max-width: 768px) {
-          .mobile-menu-toggle {
-            display: flex;
-          }
-
-          .header-nav-menu {
-            display: none;
-            flex-direction: column;
-            position: absolute;
-            top: 64px;
-            left: 0;
-            right: 0;
-            background: #ffffff;
-            border-bottom: 1px solid rgba(134, 148, 144, 0.16);
-            padding: 24px 20px;
-            gap: 12px;
-            box-shadow: 0 12px 32px rgba(25, 42, 38, 0.08);
-            z-index: 120;
-          }
-
-          .mobile-menu-active .header-nav-menu {
-            display: flex;
-          }
-
-          .nav-menu-link {
-            width: 100%;
-            text-align: center;
-            font-size: 15px;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(134, 148, 144, 0.08);
-          }
-
-          .nav-menu-link:last-child {
-            border-bottom: 0;
-          }
-
-          .highlight-btn {
-            width: 100%;
-            text-align: center;
-            margin-bottom: 8px;
-            border-bottom: 0;
-          }
+          flex-direction: column;
         }
         .changelog-viewport {
-          max-width: 860px;
+          flex: 1;
+          width: 100%;
+          max-width: 820px;
           margin: 0 auto;
-          padding: 60px 24px;
+          padding: var(--space-7) var(--space-5) var(--space-8);
         }
         .changelog-container h1 {
-          font-size: 32px;
-          font-weight: 800;
-          color: #005c53;
-          margin: 0 0 8px;
+          font-family: var(--font-serif);
+          font-size: var(--text-2xl);
+          font-weight: 400;
+          letter-spacing: -0.01em;
+          color: var(--ink);
+          margin: 0 0 var(--space-2);
         }
         .changelog-container .subtitle {
-          font-size: 16px;
-          color: #64716d;
-          margin: 0 0 48px;
+          font-size: var(--text-base);
+          color: var(--ink-tertiary);
+          margin: 0 0 var(--space-6);
+          padding-bottom: var(--space-5);
+          border-bottom: 1px solid var(--border);
         }
         .changelog-list {
           display: flex;
           flex-direction: column;
-          gap: 40px;
         }
         .changelog-item {
           display: grid;
-          grid-template-columns: 160px 1fr;
-          gap: 24px;
-          background: #ffffff;
-          border: 1px solid rgba(134, 148, 144, 0.2);
-          border-radius: 14px;
-          padding: 32px;
-          box-shadow: 0 4px 20px rgba(25, 42, 38, 0.01);
+          grid-template-columns: 140px 1fr;
+          gap: var(--space-5);
+          padding: var(--space-6) 0;
+          border-bottom: 1px solid var(--border);
+        }
+        .changelog-item:last-child {
+          border-bottom: 0;
         }
         .changelog-meta {
           display: flex;
           flex-direction: column;
-          gap: 8px;
+          gap: var(--space-1);
         }
         .version-badge {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: fit-content;
-          height: 24px;
-          padding: 0 8px;
-          border-radius: 6px;
-          background: rgba(0, 92, 83, 0.08);
-          color: #005c53;
-          font-size: 12px;
-          font-weight: 750;
+          font-family: var(--font-serif);
+          font-size: var(--text-lg);
+          color: var(--ink);
+          background: transparent;
+          padding: 0;
         }
         .version-stable {
-          background: rgba(100, 113, 109, 0.1);
-          color: #64716d;
+          color: var(--ink-tertiary);
         }
         .changelog-date {
-          font-size: 12px;
-          color: #8f9996;
+          font-size: var(--text-xs);
+          color: var(--ink-tertiary);
         }
         .changelog-details h2 {
-          margin: 0 0 12px;
-          font-size: 18px;
-          font-weight: 750;
-          color: #21313a;
+          margin: 0 0 var(--space-3);
+          font-size: var(--text-lg);
+          font-weight: 600;
+          line-height: 1.4;
+          color: var(--ink);
         }
         .changelog-details p {
-          font-size: 14.5px;
-          line-height: 1.6;
-          color: #5c6a6f;
-          margin: 0 0 16px;
+          font-size: var(--text-base);
+          line-height: 1.65;
+          color: var(--ink-secondary);
+          margin: 0 0 var(--space-4);
         }
         .changelog-details ul {
           margin: 0;
-          padding-left: 20px;
+          padding-left: 18px;
         }
         .changelog-details li {
-          font-size: 13.5px;
+          font-size: var(--text-sm);
           line-height: 1.65;
-          margin-bottom: 10px;
-          color: #4a5553;
+          margin-bottom: var(--space-2);
+          color: var(--ink-secondary);
+        }
+        .changelog-details strong {
+          color: var(--ink);
+          font-weight: 600;
+        }
+        .changelog-details code {
+          background: var(--bg-sunken);
+          border-radius: 4px;
+          padding: 1px 5px;
+          font-size: 0.9em;
         }
         @media (max-width: 768px) {
           .changelog-item {
             grid-template-columns: 1fr;
-            gap: 16px;
-            padding: 24px;
+            gap: var(--space-3);
+          }
+          .changelog-meta {
+            flex-direction: row;
+            align-items: baseline;
+            gap: var(--space-3);
           }
         }
       `}</style>

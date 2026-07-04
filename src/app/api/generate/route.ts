@@ -1,4 +1,6 @@
 import { GoogleGenAI, Type, type Schema } from "@google/genai";
+import { withGeminiRetry } from "@/lib/geminiRetry";
+import { serviceTierConfig } from "@/lib/serviceTier";
 import { createClient } from "@libsql/client";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -821,8 +823,9 @@ Response span rules:
 3. Put every dosage, contraindication, named recommendation, score threshold, date, or quantitative claim in a "clinical_assertion" span.
 4. Every "clinical_assertion" must include exact_source_quote copied verbatim (identical characters, no paraphrase) from raw_text_payload. If you cannot find a verbatim quote that supports the claim, do not make the claim.
 5. Every "clinical_assertion" must set source_urn and subject_entity_id. If source_identifier exists, subject_entity_id must copy it exactly. When several sources cover close but distinct entities (e.g. two versions of the same score), attribute each assertion strictly to the source it was drawn from and say so explicitly rather than blending them.
-6. If a required section is listed as uncovered, emit an "abstention" span for that section instead of inventing content.
+6. Never invent content for a topic the sources do not cover — simply do not mention it. Do NOT enumerate missing sections and do NOT write sentences like « n'est pas documenté dans les sources » for side topics. Emit an "abstention" span ONLY when the core question itself cannot be answered from the sources at all.
 7. Write in French medical language for an EDN student and include useful depth only when the provided source excerpts support it. Assertions that cannot be grounded this way are silently dropped before reaching the student, so prefer a well-attributed assertion over an unattributed one.
+7bis. Compose the answer like a professor answering THIS specific question: choose the structure, order, and headings that best serve the subject and the retrieved material. Do not follow a fixed template checklist; a great answer covers what the sources support, deeply, and nothing else.
 8. Every exact_source_quote MUST be a factual, declarative statement copied from raw_text_payload — never a question, a QCM/MCQ stem, or a section heading. If the only supporting excerpt is phrased as a question (e.g. « Quel est... ? »), locate a factual sentence in the same chunk that states the answer and quote that instead, or emit an abstention rather than quoting the question.
 `.trim();
 
@@ -833,15 +836,16 @@ Response span rules:
   return `
 ${baseInstruction}
 
-Response composition templates:
-- Pharmacologie: Mécanisme/Indication -> Posologie -> Contre-indications -> Interactions -> Surveillance -> Points clés EDN -> Sources.
-- Sémiologie/Cas clinique: Signes cliniques -> Examens paracliniques -> Diagnostics différentiels -> Conduite à tenir -> Points clés EDN -> Sources.
-- Urgence: Reconnaissance -> Gestes immédiats -> Traitement -> Orientation -> Points clés EDN -> Sources.
-- Calcul clinique: Formule -> Variables et unités -> Substitution numérique -> Résultat -> Interprétation -> Source.
+Inspiration (NOT a checklist — cover only what the sources support, in the order that reads best):
+- Pharmacologie: indication, posologie, contre-indications, surveillance.
+- Sémiologie/Cas clinique: signes, examens, diagnostics différentiels, conduite à tenir.
+- Urgence: reconnaissance, gestes immédiats, traitement, orientation.
+- Calcul clinique: formule, variables, substitution, résultat, interprétation.
+Skip any of these entirely when the sources say nothing about it — no placeholder, no apology, no « section non documentée ».
 
 Pour un calcul_clinique, la section Résultat DOIT contenir un clinical_assertion span avec le résultat numérique final entièrement calculé et son unité (ex. « DFG = 72 mL/min/1,73 m² »). Ne t'arrête pas à la formule ou à la substitution. Si tu ne peux pas fournir ce résultat chiffré depuis les sources, émets une abstention pour la section « resultat » au lieu de laisser le calcul incomplet.
 
-End with 3 to 5 "Points clés EDN" bullets whenever the retrieved context supports them. If a section is unsupported, use abstention rather than filler.
+End with 3 to 5 "Points clés EDN" bullets whenever the retrieved context supports them.
 `.trim();
 }
 
@@ -897,7 +901,7 @@ function buildSpanModelPrompt(body: GenerateRequestBody): string {
           ? "Pour les formules, variables, unites, seuils et interpretation d'un calcul clinique, cite prioritairement les extraits dont silo vaut clinical_formulas. N'utilise pas un QCM ou une question d'entrainement comme source d'une formule si clinical_formulas est disponible."
           : null,
       abstention_rule:
-        "Toute section uncovered_sections doit produire un span abstention visible.",
+        "N'ecris jamais de section placeholder pour un point non couvert: ignore-le. Un span abstention est reserve au cas ou la question centrale elle-meme est sans reponse dans les sources.",
     },
     null,
     2,
@@ -985,16 +989,42 @@ function enforceCalculResult(
   };
 }
 
+/**
+ * Abstention spans are internal coverage bookkeeping — the student should read
+ * a fluid answer, not a checklist of what the corpus lacks. We therefore never
+ * render per-section "non documenté" placeholders. Two exceptions:
+ * - an incomplete clinical calculation (missing résultat) still gets its
+ *   safety note, because a dangling formula is dangerous;
+ * - if NOTHING substantive survived, we render one short honest line instead
+ *   of an empty response.
+ */
 function renderSpanResponse(spans: readonly ResponseSpan[]): string {
-  return spans
-    .map((span) => {
-      if (span.type === "abstention") {
-        return `**${span.section.replace(/_/g, " ")}:**\n${span.reason}`;
-      }
-      return span.text;
-    })
-    .filter((text) => text.trim().length > 0)
-    .join("\n\n");
+  const substantive = spans
+    .flatMap((span) => (span.type === "abstention" ? [] : [span.text]))
+    .filter((text) => text.trim().length > 0);
+
+  if (substantive.length === 0) {
+    // Surface the model's own abstention explanations (real prose, e.g. "the
+    // sources list the marketed dosages but not the initial dose") rather than
+    // a generic refusal. Skip auto-injected boilerplate reasons.
+    const reasons = spans
+      .flatMap((span) => (span.type === "abstention" ? [span.reason] : []))
+      .filter((reason) => !reason.startsWith("Non trouvé dans le corpus indexé"));
+    if (reasons.length > 0) {
+      return [...new Set(reasons)].join("\n\n");
+    }
+    return "Les sources indexées ne permettent pas de répondre à cette question. Reformulez-la ou précisez le contexte clinique.";
+  }
+
+  const calculNote = spans.find(
+    (span): span is AbstentionSpan =>
+      span.type === "abstention" &&
+      (normalizeForIncludes(span.section).includes("resultat") ||
+        normalizeForIncludes(span.section).includes("interpretation")),
+  );
+
+  const rendered = substantive.join("\n\n");
+  return calculNote ? `${rendered}\n\n*${calculNote.reason}*` : rendered;
 }
 
 function clinicalSpans(payload: SpanMedicalResponsePayload): readonly ClinicalAssertionSpan[] {
@@ -1138,10 +1168,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
 
       const spanPrompt = buildSpanModelPrompt(body);
-      const response = await aiStudio.models.generateContent({
+      const response = await withGeminiRetry(() => aiStudio.models.generateContent({
         model: GENERATION_MODEL,
         contents: spanPrompt,
         config: {
+          ...serviceTierConfig(),
           systemInstruction: buildSpanSystemInstruction(
             isConversational,
             isFeatureEnabled("qualityPolish"),
@@ -1150,7 +1181,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           responseSchema: spanResponseSchema,
           temperature: 0.0,
         },
-      });
+      }));
 
       const responseText = response.text;
       if (typeof responseText !== "string" || responseText.trim().length === 0) {
@@ -1309,16 +1340,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    const response = await aiStudio.models.generateContent({
+    const response = await withGeminiRetry(() => aiStudio.models.generateContent({
       model: GENERATION_MODEL,
       contents: buildModelPrompt(body.query, body.retrievedContext),
       config: {
+        ...serviceTierConfig(),
         systemInstruction: buildSystemInstruction(isConversational),
         responseMimeType: "application/json",
         responseSchema: medicalResponseSchema,
         temperature: 0.0,
       },
-    });
+    }));
 
     const responseText = response.text;
     if (typeof responseText !== "string" || responseText.trim().length === 0) {

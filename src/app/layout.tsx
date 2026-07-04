@@ -1,12 +1,22 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { Inter } from "next/font/google";
+import { Inter, Newsreader } from "next/font/google";
 import StyledJsxRegistry from "./registry";
+import "./globals.css";
 
 const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
+  variable: "--next-font-sans",
+});
+
+const newsreader = Newsreader({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  style: ["normal", "italic"],
+  display: "swap",
+  variable: "--next-font-serif",
 });
 
 export const metadata: Metadata = {
@@ -30,53 +40,8 @@ interface RootLayoutProps {
 
 export default function RootLayout({ children }: RootLayoutProps): JSX.Element {
   return (
-    <html lang="fr">
-      <head>
-        <style>{`
-          *, *::before, *::after { box-sizing: border-box; }
-
-          html {
-            scroll-behavior: smooth;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-          }
-
-          body {
-            margin: 0;
-            color: #21313a;
-            background: #fafafa;
-          }
-
-          ::selection {
-            background: rgba(0, 92, 83, 0.15);
-            color: #004d45;
-          }
-
-          ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-          }
-          ::-webkit-scrollbar-track {
-            background: transparent;
-          }
-          ::-webkit-scrollbar-thumb {
-            background: rgba(0, 92, 83, 0.18);
-            border-radius: 999px;
-          }
-          ::-webkit-scrollbar-thumb:hover {
-            background: rgba(0, 92, 83, 0.32);
-          }
-
-          button, input, textarea {
-            font: inherit;
-          }
-          button { cursor: pointer; }
-          button:disabled, input:disabled, textarea:disabled {
-            cursor: not-allowed;
-          }
-        `}</style>
-      </head>
-      <body className={inter.className}>
+    <html lang="fr" className={`${inter.variable} ${newsreader.variable}`}>
+      <body>
         <StyledJsxRegistry>{children}</StyledJsxRegistry>
       </body>
     </html>

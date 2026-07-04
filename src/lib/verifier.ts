@@ -1,4 +1,6 @@
 import { Type, type GoogleGenAI, type Schema } from "@google/genai";
+import { withGeminiRetry } from "@/lib/geminiRetry";
+import { serviceTierConfig } from "@/lib/serviceTier";
 
 interface VerifierContextChunk {
   readonly raw_text_payload: string;
@@ -125,16 +127,17 @@ export async function verifyClinicalAssertions(
     };
   });
 
-  const response = await aiStudio.models.generateContent({
+  const response = await withGeminiRetry(() => aiStudio.models.generateContent({
     model: VERIFIER_MODEL,
     contents: JSON.stringify({ assertions: verifierInput }, null, 2),
     config: {
+      ...serviceTierConfig(),
       systemInstruction: VERIFIER_PROMPT,
       responseMimeType: "application/json",
       responseSchema: verifierSchema,
       temperature: 0.0,
     },
-  });
+  }));
 
   const parsed = JSON.parse(response.text ?? "{}") as unknown;
   if (!isRecord(parsed) || !Array.isArray(parsed["verifications"])) {

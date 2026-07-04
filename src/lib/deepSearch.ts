@@ -1,4 +1,6 @@
 import { Type, type GoogleGenAI, type Schema } from "@google/genai";
+import { withGeminiRetry } from "@/lib/geminiRetry";
+import { serviceTierConfig } from "@/lib/serviceTier";
 import type { InArgs, InValue, Row } from "@libsql/client";
 
 import {
@@ -52,7 +54,7 @@ interface GapCheckerPayload {
   readonly gap_queries?: unknown;
 }
 
-const PLANNER_MODEL = "gemini-3.5-flash";
+const PLANNER_MODEL = "gemini-3.1-flash-lite";
 const DEFAULT_MAX_ROUNDS = 3;
 const DEFAULT_PER_QUERY_LIMIT = 6;
 
@@ -343,16 +345,17 @@ function normalizePlan(value: unknown, prompt: string): RetrievalPlan {
 
 export async function planQuery(aiStudio: GoogleGenAI, prompt: string): Promise<RetrievalPlan> {
   try {
-    const response = await aiStudio.models.generateContent({
+    const response = await withGeminiRetry(() => aiStudio.models.generateContent({
       model: PLANNER_MODEL,
       contents: prompt,
       config: {
+        ...serviceTierConfig(),
         systemInstruction: PLANNER_INSTRUCTION,
         responseMimeType: "application/json",
         responseSchema: plannerSchema,
         temperature: 0.0,
       },
-    });
+    }));
     return normalizePlan(JSON.parse(response.text ?? "{}"), prompt);
   } catch (error: unknown) {
     console.warn("Deep-search planner failed, using deterministic fallback:", error);
@@ -534,7 +537,7 @@ async function checkCoverageGapsWithLlm(
 ): Promise<readonly RetrievalSubQuery[]> {
   const requiredSections = requiredSectionsForPlan(plan.primary_class, plan.secondary_class);
   try {
-    const response = await aiStudio.models.generateContent({
+    const response = await withGeminiRetry(() => aiStudio.models.generateContent({
       model: PLANNER_MODEL,
       contents: JSON.stringify(
         {
@@ -546,12 +549,13 @@ async function checkCoverageGapsWithLlm(
         2,
       ),
       config: {
+        ...serviceTierConfig(),
         systemInstruction: GAP_CHECKER_INSTRUCTION,
         responseMimeType: "application/json",
         responseSchema: gapCheckerSchema,
         temperature: 0.0,
       },
-    });
+    }));
     const parsed = JSON.parse(response.text ?? "{}") as GapCheckerPayload;
     if (!Array.isArray(parsed.gap_queries)) {
       return [];

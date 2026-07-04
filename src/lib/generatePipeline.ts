@@ -1,4 +1,5 @@
 import { GoogleGenAI, Type, type Schema } from "@google/genai";
+import { withGeminiRetry } from "@/lib/geminiRetry";
 import { createClient } from "@libsql/client";
 
 import { isFeatureEnabled } from "@/lib/featureFlags";
@@ -1111,7 +1112,7 @@ export async function runGeneratePipeline(
       }
 
       const spanPrompt = buildSpanModelPrompt(body);
-      const response = await aiStudio.models.generateContent({
+      const response = await withGeminiRetry(() => aiStudio.models.generateContent({
         model: GENERATION_MODEL,
         contents: spanPrompt,
         config: {
@@ -1123,7 +1124,7 @@ export async function runGeneratePipeline(
           responseSchema: spanResponseSchema,
           temperature: 0.0,
         },
-      });
+      }));
 
       const responseText = response.text;
       if (typeof responseText !== "string" || responseText.trim().length === 0) {
@@ -1273,7 +1274,7 @@ export async function runGeneratePipeline(
       };
     }
 
-    const response = await aiStudio.models.generateContent({
+    const response = await withGeminiRetry(() => aiStudio.models.generateContent({
       model: GENERATION_MODEL,
       contents: buildModelPrompt(body.query, body.retrievedContext),
       config: {
@@ -1282,7 +1283,7 @@ export async function runGeneratePipeline(
         responseSchema: medicalResponseSchema,
         temperature: 0.0,
       },
-    });
+    }));
 
     const responseText = response.text;
     if (typeof responseText !== "string" || responseText.trim().length === 0) {

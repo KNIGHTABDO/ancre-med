@@ -1,753 +1,297 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import type { JSX } from "react";
+import { SiteHeader } from "../components/SiteHeader";
+import { SiteFooter } from "../components/SiteFooter";
+import { Button } from "../components/Button";
+
+const PIPELINE_STEPS: ReadonlyArray<{ num: string; title: string; desc: string }> = [
+  {
+    num: "01",
+    title: "Question",
+    desc: "Vous posez une question clinique, comme à un confrère.",
+  },
+  {
+    num: "02",
+    title: "Recherche",
+    desc: "76 303 fiches HAS, ANSM et EDN interrogées localement.",
+  },
+  {
+    num: "03",
+    title: "Rédaction",
+    desc: "Une réponse structurée, rédigée à partir des seuls extraits retrouvés.",
+  },
+  {
+    num: "04",
+    title: "Vérification",
+    desc: "Chaque assertion chiffrée contrôlée mot à mot contre le texte source.",
+  },
+];
+
+const FEATURES: ReadonlyArray<{ title: string; desc: string }> = [
+  {
+    title: "Index médicaux locaux",
+    desc: "Recherche plein texte instantanée dans plus de 76 000 fiches de référence. Aucune latence cloud pour la recherche documentaire.",
+  },
+  {
+    title: "Reformulation sémantique",
+    desc: "Le routeur reformule votre question en mots-clés optimisés — traduction des sigles, synonymes cliniques — pour maximiser le rappel.",
+  },
+  {
+    title: "Double valve clinique",
+    desc: "Chaque dosage, seuil ou critère diagnostique est vérifié contre le texte original. En cas de dérive factuelle, la réponse est bloquée.",
+  },
+];
 
 export default function LandingPage(): JSX.Element {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
-  const qualityPolishEnabled = process.env["ANCREMED_V2_QUALITY_POLISH"] === "true";
   return (
-    <main className="workspace-shell">
-      {/* Navigation Header */}
-      <header className={`app-global-header ${mobileMenuOpen ? "mobile-menu-active" : ""}`}>
-        <div className="header-container">
-          <Link href="/" className="logo-brand">
-            AncreMed
+    <main className="landing-shell">
+      <SiteHeader />
+
+      <section className="hero fade-up">
+        <div className="hero-inner">
+          <Link href="/changelog" className="hero-eyebrow">
+            Nouveau · Propulsé par Gemini 3.5 Flash
           </Link>
-
-          <button
-            className="mobile-menu-toggle"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle menu"
-          >
-            {mobileMenuOpen ? (
-              <svg fill="none" height="24" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" width="24">
-                <path d="M18 6L6 18M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg fill="none" height="24" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" width="24">
-                <path d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            )}
-          </button>
-
-          <nav className="header-nav-menu">
-            <Link href="/chat" className="nav-menu-link highlight-btn" onClick={() => setMobileMenuOpen(false)}>
-              Console Clinique
-            </Link>
-            <Link href="/paper" className="nav-menu-link" onClick={() => setMobileMenuOpen(false)}>
-              Rapport Scientifique
-            </Link>
-            <Link href="/changelog" className="nav-menu-link" onClick={() => setMobileMenuOpen(false)}>
-              Changelog
-            </Link>
-          </nav>
-        </div>
-      </header>
-
-      {/* Hero Section */}
-      <section className="hero-section fade-in">
-        <div className="hero-container">
-          <div className="announcement-wrapper">
-            <Link href="/changelog" className="announcement-badge">
-              <span className="badge-pill">Nouveau</span>
-              <span className="badge-text">Propulsé par Gemini 3.5 Flash pour une validation clinique renforcée</span>
-              <svg className="badge-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="12" height="12">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
           <h1>
-            L'intelligence médicale clinique, <br />
-            <span className="text-teal">
-              {qualityPolishEnabled
-                ? "avec affirmations chiffrées vérifiées"
-                : "garantie sans hallucinations"}
-            </span>
+            Des réponses cliniques que
+            <br />
+            vous pouvez <em>vérifier</em>.
           </h1>
           <p className="hero-desc">
-            Interrogez en temps réel 76 303 fiches issues des référentiels de la <strong>Haute Autorité de Santé (HAS)</strong>,
-            de la <strong>Base des Médicaments (ANSM)</strong> et du <strong>Collège des Enseignants (EDN)</strong>.
-            {qualityPolishEnabled
-              ? " Chaque affirmation chiffrée est vérifiée mot à mot et par un second modèle indépendant contre le texte source."
-              : " Une double valve d'attribution vérifie chaque fait mot à mot."}
+            AncreMed interroge 76 303 fiches issues des référentiels de la Haute Autorité de
+            Santé, de la base des médicaments ANSM et du Collège des Enseignants — et vérifie
+            chaque assertion mot à mot contre le texte source.
           </p>
           <div className="hero-actions">
-            <Link href="/chat" className="btn btn-primary">
-              Lancer la Console
-              <svg fill="none" height="16" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" width="16">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-            </Link>
-            <Link href="/paper" className="btn btn-secondary">
-              Découvrir la Technologie
-            </Link>
+            <Button href="/chat">Ouvrir la console</Button>
+            <Button href="/paper" variant="secondary">
+              Lire le rapport scientifique
+            </Button>
           </div>
         </div>
       </section>
 
-      {/* SVG Pipeline Architecture Diagram */}
-      <section className="diagram-section">
-        <div className="diagram-container">
-          <h2>Architecture du Moteur RAG Local</h2>
-          <p className="section-desc">
-            Visualisez le parcours de votre question clinique à travers nos modules d'IA et nos index sémantiques locaux.
-          </p>
-
-          <div className="svg-wrapper">
-            <svg className="architecture-svg" viewBox="0 0 800 420" width="100%" height="auto">
-              <defs>
-                <linearGradient id="grad-teal" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#005c53" />
-                  <stop offset="100%" stopColor="#043d37" />
-                </linearGradient>
-                <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
-                  <feDropShadow dx="0" dy="8" stdDeviation="6" floodColor="#192a26" floodOpacity="0.04" />
-                </filter>
-              </defs>
-
-              {/* Step 1: Input */}
-              <g transform="translate(40, 180)" filter="url(#shadow)">
-                <rect width="130" height="60" rx="10" fill="#ffffff" stroke="rgba(134,148,144,0.3)" strokeWidth="1" />
-                <text x="65" y="28" textAnchor="middle" fill="#21313a" fontSize="13" fontWeight="600">Question Médicale</text>
-                <text x="65" y="44" textAnchor="middle" fill="#64716d" fontSize="10">Étudiant / Interne</text>
-              </g>
-
-              {/* Arrow 1 */}
-              <path d="M170 210 L 210 210" stroke="#005c53" strokeWidth="2" strokeDasharray="6 4" className="svg-flow-arrow" />
-              <polygon points="210,207 217,210 210,213" fill="#005c53" />
-
-              {/* Step 2: Agentic Router */}
-              <g transform="translate(220, 150)" filter="url(#shadow)">
-                <rect width="160" height="120" rx="12" fill="#005c53" stroke="#005c53" strokeWidth="1.5" />
-                <text x="80" y="32" textAnchor="middle" fill="#ffffff" fontSize="13" fontWeight="600">Routeur IA Agentic</text>
-                <text x="80" y="55" textAnchor="middle" fill="rgba(255,255,255,0.8)" fontSize="11">Classification &</text>
-                <text x="80" y="70" textAnchor="middle" fill="rgba(255,255,255,0.8)" fontSize="11">Reformulation</text>
-                <text x="80" y="95" textAnchor="middle" fill="#2ecc71" fontSize="10" fontWeight="700">gemini-3.5-flash</text>
-              </g>
-
-              {/* Branch 1: Conversational Bypass (Up) */}
-              <path d="M300 150 L 300 80 L 610 80" fill="none" stroke="#e67e22" strokeWidth="2" strokeDasharray="5 3" className="svg-flow-arrow" />
-              <polygon points="610,77 617,80 610,83" fill="#e67e22" />
-              <text x="310" y="110" fill="#e67e22" fontSize="10" fontWeight="600">Dialogue direct (Bypass)</text>
-
-              {/* Arrow 2 */}
-              <path d="M380 210 L 420 210" stroke="#005c53" strokeWidth="2" strokeDasharray="6 4" className="svg-flow-arrow" />
-              <polygon points="420,207 427,210 420,213" fill="#005c53" />
-
-              {/* Step 3: Retrieval Sources */}
-              <g transform="translate(430, 150)" filter="url(#shadow)">
-                <rect width="160" height="120" rx="12" fill="#ffffff" stroke="rgba(134,148,144,0.3)" strokeWidth="1" />
-                <text x="80" y="28" textAnchor="middle" fill="#21313a" fontSize="13" fontWeight="700">Index de Recherche</text>
-                <text x="80" y="52" textAnchor="middle" fill="#005c53" fontSize="11" fontWeight="600">SQLite FTS5 (Local)</text>
-                <text x="80" y="70" textAnchor="middle" fill="#3b5bdb" fontSize="11" fontWeight="600">api-medicaments.fr</text>
-                <text x="80" y="88" textAnchor="middle" fill="#0c8599" fontSize="11" fontWeight="600">Wikipedia FR API</text>
-                <text x="80" y="106" textAnchor="middle" fill="#64716d" fontSize="9">76 303 fiches cliniques</text>
-              </g>
-
-              {/* Arrow 3 */}
-              <path d="M590 210 L 620 210" stroke="#005c53" strokeWidth="2" strokeDasharray="6 4" className="svg-flow-arrow" />
-              <polygon points="620,207 627,210 620,213" fill="#005c53" />
-
-              {/* Step 4: Generation & Attributor */}
-              <g transform="translate(630, 50)" filter="url(#shadow)">
-                <rect width="140" height="310" rx="12" fill="#ffffff" stroke="rgba(134,148,144,0.3)" strokeWidth="1" />
-                <text x="70" y="32" textAnchor="middle" fill="#21313a" fontSize="13" fontWeight="700">Attribution</text>
-                <text x="70" y="48" textAnchor="middle" fill="#005c53" fontSize="11" fontWeight="600">Valve Clinique</text>
-
-                <rect x="15" y="75" width="110" height="50" rx="6" fill="#f1fcf9" stroke="rgba(0,92,83,0.18)" />
-                <text x="70" y="93" textAnchor="middle" fill="#005c53" fontSize="10" fontWeight="700">1. Génération</text>
-                <text x="70" y="108" textAnchor="middle" fill="#5c6a6f" fontSize="9">Gemini Flash-Lite</text>
-
-                <rect x="15" y="145" width="110" height="50" rx="6" fill="#fff8f8" stroke="rgba(231,76,60,0.18)" />
-                <text x="70" y="163" textAnchor="middle" fill="#c0392b" fontSize="10" fontWeight="700">2. Extraction</text>
-                <text x="70" y="178" textAnchor="middle" fill="#5c6a6f" fontSize="9">Allégations Cliniques</text>
-
-                <rect x="15" y="215" width="110" height="70" rx="6" fill="#e8f8f5" stroke="rgba(46,204,113,0.18)" />
-                <text x="70" y="233" textAnchor="middle" fill="#2ecc71" fontSize="10" fontWeight="700">3. Attribution</text>
-                <text x="70" y="250" textAnchor="middle" fill="#21313a" fontSize="9">Contrôle mot-à-mot</text>
-                <text x="70" y="265" textAnchor="middle" fill="#21313a" fontSize="9">dans l'index SQLite</text>
-              </g>
-
-              {/* Final Output label */}
-              <path d="M700 360 L 700 390 L 590 390" fill="none" stroke="#2ecc71" strokeWidth="2" strokeDasharray="6 4" className="svg-flow-arrow" />
-              <polygon points="590,387 583,390 590,393" fill="#2ecc71" />
-
-              <g transform="translate(420, 365)">
-                <rect width="150" height="50" rx="8" fill="#e8f8f5" stroke="#2ecc71" strokeWidth="1" />
-                <text x="75" y="22" textAnchor="middle" fill="#27ae60" fontSize="11" fontWeight="700">Réponse validée 200</text>
-                <text x="75" y="38" textAnchor="middle" fill="#64716d" fontSize="9">Avec sources citées</text>
-              </g>
-
-              <path d="M700 360 L 700 390 L 730 390 L 730 400" fill="none" stroke="#c0392b" strokeWidth="1.5" strokeDasharray="3 2" />
-              <polygon points="727,400 730,405 733,400" fill="#c0392b" />
-              <text x="740" y="398" fill="#c0392b" fontSize="9" fontWeight="600">Dérive factuelle</text>
-
-              <g transform="translate(680, 407)">
-                <rect width="105" height="15" rx="3" fill="#fff8f8" stroke="#c0392b" strokeWidth="0.5" />
-                <text x="52.5" y="10" textAnchor="middle" fill="#c0392b" fontSize="8" fontWeight="600">Bloqué (Valve 422)</text>
-              </g>
-            </svg>
-          </div>
+      <section className="pipeline">
+        <div className="pipeline-inner">
+          <h2>Comment une réponse est construite</h2>
+          <ol className="pipeline-steps">
+            {PIPELINE_STEPS.map((s) => (
+              <li key={s.num} className="pipeline-step">
+                <span className="pipeline-num">{s.num}</span>
+                <h3>{s.title}</h3>
+                <p>{s.desc}</p>
+              </li>
+            ))}
+          </ol>
         </div>
       </section>
 
-      {/* Feature Grid */}
-      <section className="features-section">
-        <div className="features-container">
-          <h2>Les Piliers d'AncreMed</h2>
-          <p className="section-desc">Conçu spécifiquement pour répondre aux exigences des examens EDN et de la pratique hospitalière française.</p>
-
+      <section className="features">
+        <div className="features-inner">
+          <h2>Conçu pour l’EDN et la pratique hospitalière</h2>
           <div className="features-grid">
-            <article className="feature-card">
-              <div className="feature-icon icon-teal">
-                <svg fill="none" height="24" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" width="24">
-                  <ellipse cx="12" cy="5" rx="9" ry="3" />
-                  <path d="M3 5v6c0 1.66 4 3 9 3s9-1.34 9-3V5M3 11v6c0 1.66 4 3 9 3s9-1.34 9-3v-6" />
-                </svg>
-              </div>
-              <h3>Index Médicaux Locaux</h3>
-              <p>
-                Recherche plein texte instantanée dans plus de 76 000 fiches. Aucune latence cloud, aucune clé d'intégration réseau requise pour la recherche.
-              </p>
-            </article>
-
-            <article className="feature-card">
-              <div className="feature-icon icon-indigo">
-                <svg fill="none" height="24" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" width="24">
-                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                </svg>
-              </div>
-              <h3>Optimisation IA Sémantique</h3>
-              <p>
-                Le routeur IA reformule vos questions cliniques en mots-clés optimisés en français (traduction des sigles, ajout de synonymes) pour maximiser les résultats FTS5.
-              </p>
-            </article>
-
-            <article className="feature-card">
-              <div className="feature-icon icon-emerald">
-                <svg fill="none" height="24" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" width="24">
-                  <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-              </div>
-              <h3>Double Valve Clinique</h3>
-              <p>
-                Chaque allégation de dosage ou de diagnostic générée est vérifiée par rapport au texte original. En cas de dérive factuelle, la réponse est bloquée.
-              </p>
-            </article>
+            {FEATURES.map((f) => (
+              <article key={f.title} className="feature">
+                <h3>{f.title}</h3>
+                <p>{f.desc}</p>
+              </article>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Footer Section */}
-      <footer className="landing-footer">
-        <div className="footer-container">
-          <p className="footer-brand">AncreMed © 2026 - Outil Libre d'Attribution Clinique</p>
-          <nav className="footer-links">
-            <Link href="/chat">Console</Link>
-            <Link href="/paper">Recherche</Link>
-            <Link href="/changelog">Changelog</Link>
-            <Link href="/terms">CGU</Link>
-            <Link href="/privacy">Confidentialité</Link>
-          </nav>
-        </div>
-      </footer>
+      <SiteFooter />
 
-      {/* Landing Page Custom Styling */}
       <style jsx global>{`
-        .app-global-header {
-          position: sticky;
-          top: 0;
-          left: 0;
-          right: 0;
-          height: 64px;
-          border-bottom: 1px solid rgba(134, 148, 144, 0.16);
-          background: rgba(251, 252, 251, 0.92);
-          backdrop-filter: blur(16px);
-          z-index: 100;
-        }
-
-        .header-container {
-          height: 100%;
+        .landing-shell {
+          min-height: 100vh;
           display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0 24px;
-          position: relative;
+          flex-direction: column;
+          background: var(--bg);
         }
 
-        .logo-brand {
-          font-size: 20px;
-          font-weight: 760;
-          color: #005c53;
-          text-decoration: none;
-          letter-spacing: -0.015em;
+        /* Hero */
+        .hero {
+          padding: var(--space-8) var(--space-5) var(--space-8);
         }
-
-        .mobile-menu-toggle {
-          display: none;
-          background: transparent;
-          border: 0;
-          color: #005c53;
-          cursor: pointer;
-          padding: 6px;
-          border-radius: 8px;
-          align-items: center;
-          justify-content: center;
-          transition: background 160ms ease;
-        }
-
-        .mobile-menu-toggle:hover {
-          background: rgba(0, 92, 83, 0.08);
-        }
-
-        .header-nav-menu {
-          display: flex;
-          align-items: center;
-          gap: 24px;
-        }
-
-        .nav-menu-link {
-          font-size: 13.5px;
-          font-weight: 600;
-          color: #4a5553;
-          text-decoration: none;
-          transition: color 160ms ease;
-        }
-
-        .nav-menu-link:hover {
-          color: #005c53;
-        }
-
-        .highlight-btn {
-          background: #005c53;
-          color: #ffffff;
-          padding: 8px 16px;
-          border-radius: 8px;
-          box-shadow: 0 4px 12px rgba(0, 92, 83, 0.14);
-          transition: all 180ms ease;
-        }
-
-        .highlight-btn:hover {
-          background: #064c45;
-          color: #ffffff;
-          box-shadow: 0 6px 16px rgba(0, 92, 83, 0.18);
-        }
-
-        @media (max-width: 768px) {
-          .mobile-menu-toggle {
-            display: flex;
-          }
-
-          .header-nav-menu {
-            display: none;
-            flex-direction: column;
-            position: absolute;
-            top: 64px;
-            left: 0;
-            right: 0;
-            background: #ffffff;
-            border-bottom: 1px solid rgba(134, 148, 144, 0.16);
-            padding: 24px 20px;
-            gap: 12px;
-            box-shadow: 0 12px 32px rgba(25, 42, 38, 0.08);
-            z-index: 120;
-          }
-
-          .mobile-menu-active .header-nav-menu {
-            display: flex;
-          }
-
-          .nav-menu-link {
-            width: 100%;
-            text-align: center;
-            font-size: 15px;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(134, 148, 144, 0.08);
-          }
-
-          .nav-menu-link:last-child {
-            border-bottom: 0;
-          }
-
-          .highlight-btn {
-            width: 100%;
-            text-align: center;
-            margin-bottom: 8px;
-            border-bottom: 0;
-          }
-        }
-
-        /* Hero styling */
-        .hero-section {
-          padding: 80px 24px 60px;
-          text-align: center;
-          position: relative;
-          z-index: 2;
-        }
-
-        .hero-section {
-          padding: 80px 24px 60px;
-          text-align: center;
-          position: relative;
-          z-index: 2;
-        }
-
-        .hero-container {
-          max-width: 820px;
+        .hero-inner {
+          max-width: 760px;
           margin: 0 auto;
+          text-align: center;
         }
-
-        .announcement-wrapper {
-          display: flex;
-          justify-content: center;
-          margin-bottom: 28px;
-        }
-
-        .announcement-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
-          padding: 5px 14px 5px 6px;
-          background: #ffffff;
-          border: 1px solid rgba(0, 92, 83, 0.12);
-          border-radius: 9999px;
+        .hero-eyebrow {
+          display: inline-block;
+          font-size: var(--text-sm);
+          color: var(--ink-tertiary);
           text-decoration: none;
-          box-shadow: 0 2px 8px rgba(0, 92, 83, 0.03);
-          transition: all 200ms ease;
+          margin-bottom: var(--space-5);
+          transition: color var(--dur-fast) var(--ease-in-out);
         }
-
-        .announcement-badge:hover {
-          border-color: rgba(0, 92, 83, 0.28);
-          box-shadow: 0 4px 12px rgba(0, 92, 83, 0.06);
-          background: #fafdfc;
+        .hero-eyebrow:hover {
+          color: var(--ink-secondary);
         }
-
-        .badge-pill {
-          background: #005c53;
-          color: #ffffff;
-          font-size: 10px;
-          font-weight: 700;
-          text-transform: uppercase;
-          padding: 2.5px 8.5px;
-          border-radius: 9999px;
-          letter-spacing: 0.04em;
-        }
-
-        .badge-text {
-          font-family: ui-sans-serif, system-ui, sans-serif;
-          font-size: 12.5px;
-          font-weight: 600;
-          color: #21313a;
-          letter-spacing: -0.015em;
-        }
-
-        .badge-arrow {
-          color: #005c53;
-          transition: transform 180ms ease;
-        }
-
-        .announcement-badge:hover .badge-arrow {
-          transform: translateX(3px);
-        }
-
-        .hero-section h1 {
-          font-size: 48px;
+        .hero h1 {
+          font-family: var(--font-serif);
+          font-size: var(--text-4xl);
+          font-weight: 400;
           line-height: 1.15;
-          font-weight: 800;
-          color: #21313a;
-          margin: 0 0 20px;
-          letter-spacing: -0.02em;
-          background: linear-gradient(135deg, #1a2a26 30%, #005c53 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
+          letter-spacing: -0.01em;
+          color: var(--ink);
+          margin: 0 0 var(--space-5);
         }
-
+        .hero h1 em {
+          font-style: italic;
+          color: var(--accent);
+        }
         .hero-desc {
-          font-size: 18px;
-          line-height: 1.6;
-          color: #4a5553;
-          margin: 0 auto 36px;
-          max-width: 680px;
-          font-weight: 420;
+          font-size: var(--text-lg);
+          line-height: 1.65;
+          color: var(--ink-secondary);
+          max-width: 620px;
+          margin: 0 auto var(--space-6);
         }
-
-        .hero-desc strong {
-          color: #21313a;
-          font-weight: 650;
-        }
-
         .hero-actions {
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 16px;
+          gap: var(--space-3);
         }
 
-        .btn {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          height: 48px;
-          padding: 0 24px;
-          border-radius: 10px;
-          font-size: 14.5px;
-          font-weight: 620;
-          text-decoration: none;
-          transition: all 180ms ease;
+        /* Pipeline strip */
+        .pipeline {
+          border-top: 1px solid var(--border);
+          padding: var(--space-7) var(--space-5);
         }
-
-        .btn-primary {
-          background: #005c53;
-          color: #ffffff;
-          box-shadow: 0 6px 20px rgba(0, 92, 83, 0.15);
-        }
-
-        .btn-primary:hover {
-          background: #064c45;
-          transform: translateY(-1px);
-          box-shadow: 0 8px 24px rgba(0, 92, 83, 0.22);
-        }
-
-        .btn-secondary {
-          background: #ffffff;
-          border: 1px solid rgba(134, 148, 144, 0.28);
-          color: #4a5553;
-        }
-
-        .btn-secondary:hover {
-          background: #fcfdfc;
-          border-color: rgba(134, 148, 144, 0.45);
-          color: #21313a;
-        }
-
-        /* Diagram section */
-        .diagram-section {
-          padding: 40px 24px 60px;
-          background: rgba(255, 255, 255, 0.6);
-          border-top: 1px solid rgba(134, 148, 144, 0.1);
-          border-bottom: 1px solid rgba(134, 148, 144, 0.1);
-          position: relative;
-          z-index: 2;
-        }
-
-        .diagram-container {
-          max-width: 1100px;
+        .pipeline-inner {
+          max-width: 1080px;
           margin: 0 auto;
+        }
+        .pipeline h2,
+        .features h2 {
+          font-family: var(--font-serif);
+          font-size: var(--text-2xl);
+          font-weight: 400;
+          letter-spacing: -0.01em;
+          color: var(--ink);
+          margin: 0 0 var(--space-6);
           text-align: center;
         }
-
-        .diagram-container h2 {
-          font-size: 28px;
-          font-weight: 760;
-          color: #21313a;
-          margin: 0 0 10px;
+        .pipeline-steps {
+          list-style: none;
+          margin: 0;
+          padding: 0;
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+        }
+        .pipeline-step {
+          padding: 0 var(--space-5);
+          border-left: 1px solid var(--border);
+        }
+        .pipeline-step:first-child {
+          border-left: 0;
+        }
+        .pipeline-num {
+          font-family: var(--font-serif);
+          font-size: var(--text-base);
+          color: var(--ink-tertiary);
+        }
+        .pipeline-step h3 {
+          font-size: var(--text-base);
+          font-weight: 600;
+          color: var(--ink);
+          margin: var(--space-2) 0 var(--space-2);
+        }
+        .pipeline-step p {
+          font-size: var(--text-sm);
+          line-height: 1.6;
+          color: var(--ink-secondary);
+          margin: 0;
         }
 
-        .section-desc {
-          font-size: 15px;
-          color: #64716d;
-          margin: 0 auto 40px;
-          max-width: 580px;
+        /* Features */
+        .features {
+          border-top: 1px solid var(--border);
+          padding: var(--space-7) var(--space-5) var(--space-8);
         }
-
-        .svg-wrapper {
-          background: rgba(255, 255, 255, 0.85);
-          border: 1px solid rgba(134, 148, 144, 0.22);
-          border-radius: 16px;
-          padding: 32px 24px;
-          box-shadow: 0 12px 36px rgba(25, 42, 38, 0.03);
-          max-width: 860px;
+        .features-inner {
+          max-width: 1080px;
           margin: 0 auto;
         }
-
-        .architecture-svg {
-          width: 100%;
-          height: auto;
-        }
-
-        /* Animated flow arrows inside SVG */
-        .svg-flow-arrow {
-          animation: flow-dash 1.2s linear infinite;
-        }
-
-        @keyframes flow-dash {
-          to {
-            stroke-dashoffset: -20;
-          }
-        }
-
-        /* Features section */
-        .features-section {
-          padding: 80px 24px;
-          position: relative;
-          z-index: 2;
-        }
-
-        .features-container {
-          max-width: 1100px;
-          margin: 0 auto;
-          text-align: center;
-        }
-
-        .features-container h2 {
-          font-size: 28px;
-          font-weight: 760;
-          color: #21313a;
-          margin: 0 0 10px;
-        }
-
         .features-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 28px;
-          margin-top: 50px;
-          text-align: left;
+          grid-template-columns: repeat(3, 1fr);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-lg);
+          overflow: hidden;
+          background: var(--bg-raised);
         }
-
-        .feature-card {
-          background: rgba(255, 255, 255, 0.82);
-          border: 1px solid rgba(134, 148, 144, 0.2);
-          border-radius: 14px;
-          padding: 32px;
-          box-shadow: 0 8px 24px rgba(25, 42, 38, 0.02);
-          transition: all 220ms ease;
+        .feature {
+          padding: var(--space-6) var(--space-5);
+          border-left: 1px solid var(--border);
         }
-
-        .feature-card:hover {
-          transform: translateY(-2px);
-          border-color: rgba(0, 92, 83, 0.24);
-          box-shadow: 0 12px 32px rgba(0, 92, 83, 0.05);
+        .feature:first-child {
+          border-left: 0;
         }
-
-        .feature-icon {
-          width: 44px;
-          height: 44px;
-          border-radius: 10px;
-          display: grid;
-          place-items: center;
-          margin-bottom: 20px;
-        }
-
-        .icon-teal {
-          background: rgba(0, 92, 83, 0.06);
-          color: #005c53;
-        }
-
-        .icon-indigo {
-          background: rgba(59, 91, 219, 0.06);
-          color: #3b5bdb;
-        }
-
-        .icon-emerald {
-          background: rgba(46, 204, 113, 0.06);
-          color: #2ecc71;
-        }
-
-        .feature-card h3 {
-          margin: 0 0 12px;
-          font-size: 17px;
-          font-weight: 720;
-          color: #21313a;
-        }
-
-        .feature-card p {
-          margin: 0;
-          font-size: 13.5px;
-          line-height: 1.6;
-          color: #64716d;
-        }
-
-        /* Fade-in animations */
-        .fade-in {
-          animation: fade-in-anim 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
-        }
-
-        @keyframes fade-in-anim {
-          from {
-            opacity: 0;
-            transform: translateY(12px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        /* Footer styling */
-        .landing-footer {
-          border-top: 1px solid rgba(134, 148, 144, 0.16);
-          background: rgba(245, 246, 245, 0.4);
-          padding: 24px 24px;
-          position: relative;
-          z-index: 2;
-        }
-
-        .footer-container {
-          max-width: 1100px;
-          margin: 0 auto;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          flex-wrap: wrap;
-          gap: 16px;
-        }
-
-        .footer-brand {
-          font-size: 12.5px;
-          color: #8f9996;
-          margin: 0;
-        }
-
-        .footer-links {
-          display: flex;
-          align-items: center;
-          gap: 20px;
-        }
-
-        .footer-links a {
-          font-size: 12.5px;
+        .feature h3 {
+          font-size: var(--text-base);
           font-weight: 600;
-          color: #64716d;
-          text-decoration: none;
-          transition: color 160ms ease;
+          color: var(--ink);
+          margin: 0 0 var(--space-3);
+        }
+        .feature p {
+          font-size: var(--text-sm);
+          line-height: 1.65;
+          color: var(--ink-secondary);
+          margin: 0;
         }
 
-        .footer-links a:hover {
-          color: #005c53;
-        }
-
-        @media (max-width: 768px) {
-          .hero-section h1 {
-            font-size: 34px;
+        @media (max-width: 900px) {
+          .pipeline-steps {
+            grid-template-columns: repeat(2, 1fr);
+            row-gap: var(--space-6);
           }
-          .hero-desc {
-            font-size: 15px;
+          .pipeline-step:nth-child(3) {
+            border-left: 0;
           }
-          .hero-actions {
-            flex-direction: column;
-            width: 100%;
-            max-width: 280px;
-            margin: 0 auto;
+          .features-grid {
+            grid-template-columns: 1fr;
           }
-          .btn {
-            width: 100%;
+          .feature {
+            border-left: 0;
+            border-top: 1px solid var(--border);
           }
-          .header-nav-menu {
-            gap: 14px;
-          }
-          .footer-container {
-            flex-direction: column;
-            text-align: center;
+          .feature:first-child {
+            border-top: 0;
           }
         }
 
         @media (max-width: 600px) {
-          .header-nav-menu a:nth-child(4),
-          .header-nav-menu a:nth-child(5) {
-            display: none !important;
+          .hero {
+            padding: var(--space-7) var(--space-4);
+          }
+          .hero h1 {
+            font-size: var(--text-3xl);
+          }
+          .hero-desc {
+            font-size: var(--text-base);
+          }
+          .hero-actions {
+            flex-direction: column;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+          }
+          .hero-actions .am-btn {
+            width: 100%;
+          }
+          .pipeline-steps {
+            grid-template-columns: 1fr;
+          }
+          .pipeline-step {
+            border-left: 0;
+            padding: 0;
           }
         }
       `}</style>

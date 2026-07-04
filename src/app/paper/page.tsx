@@ -1,53 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
 import type { JSX } from "react";
+import { SiteHeader } from "../../components/SiteHeader";
+import { SiteFooter } from "../../components/SiteFooter";
 
 export default function PaperPage(): JSX.Element {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const qualityPolishEnabled = process.env["ANCREMED_V2_QUALITY_POLISH"] === "true";
   return (
     <main className="workspace-shell academic-paper-theme">
-      {/* Navigation Header */}
-      <header className={`app-global-header ${mobileMenuOpen ? "mobile-menu-active" : ""}`}>
-        <div className="header-container">
-          <Link href="/" className="logo-brand">
-            AncreMed
-          </Link>
-
-          <button
-            className="mobile-menu-toggle"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle menu"
-          >
-            {mobileMenuOpen ? (
-              <svg fill="none" height="24" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" width="24">
-                <path d="M18 6L6 18M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg fill="none" height="24" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" width="24">
-                <path d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            )}
-          </button>
-
-          <nav className="header-nav-menu">
-            <Link href="/chat" className="nav-menu-link highlight-btn" onClick={() => setMobileMenuOpen(false)}>
-              Console Clinique
-            </Link>
-            <Link href="/paper" className="nav-menu-link" onClick={() => setMobileMenuOpen(false)}>
-              Rapport Scientifique
-            </Link>
-            <Link href="/changelog" className="nav-menu-link" onClick={() => setMobileMenuOpen(false)}>
-              Changelog
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <SiteHeader />
 
       {/* Main Container */}
-      <div className="paper-viewport">
+      <div className="paper-viewport fade-up">
         <article className="paper-document">
           {/* Metadata Section */}
           <header className="paper-doc-header">
@@ -320,12 +284,12 @@ ORDER BY score ASC LIMIT :limit;`}
             <div className="math-block">
               {/* SVG representation of the logic */}
               <svg viewBox="0 0 700 120" width="100%" height="auto">
-                <rect width="700" height="120" rx="8" fill="#f8faf9" stroke="rgba(134,148,144,0.2)" />
+                <rect width="700" height="120" rx="8" fill="var(--bg-sunken)" stroke="rgba(134,148,144,0.2)" />
                 <text x="350" y="30" textAnchor="middle" fill="#21313a" fontSize="13" fontWeight="700">Classification logic formula</text>
-                <text x="350" y="65" textAnchor="middle" fill="#005c53" fontSize="16" fontFamily="Courier New">
+                <text x="350" y="65" textAnchor="middle" fill="var(--accent)" fontSize="16" fontFamily="Courier New">
                   f(Prompt) ➔ [ Is_Conversational: boolean, Search_Query: string ]
                 </text>
-                <text x="350" y="95" textAnchor="middle" fill="#64716d" fontSize="11">Structured Output Schema via Gemini JSON-MimeType</text>
+                <text x="350" y="95" textAnchor="middle" fill="var(--ink-tertiary)" fontSize="11">Structured Output Schema via Gemini JSON-MimeType</text>
               </svg>
             </div>
 
@@ -398,35 +362,35 @@ ORDER BY score ASC LIMIT :limit;`}
               <svg viewBox="0 0 800 180" width="100%" height="auto">
                 <defs>
                   <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#005c53" />
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent)" />
                   </marker>
                 </defs>
 
                 {/* Box 1 */}
-                <rect x="20" y="50" width="160" height="70" rx="8" fill="#ffffff" stroke="#005c53" strokeWidth="1.5" />
+                <rect x="20" y="50" width="160" height="70" rx="8" fill="var(--bg-raised)" stroke="var(--accent)" strokeWidth="1.5" />
                 <text x="100" y="80" textAnchor="middle" fill="#21313a" fontSize="12" fontWeight="700">1. LLM Generation</text>
-                <text x="100" y="98" textAnchor="middle" fill="#64716d" fontSize="10">Drafts Clinical Text</text>
+                <text x="100" y="98" textAnchor="middle" fill="var(--ink-tertiary)" fontSize="10">Drafts Clinical Text</text>
 
-                <path d="M 180 85 L 220 85" fill="none" stroke="#005c53" strokeWidth="2" markerEnd="url(#arrow)" />
+                <path d="M 180 85 L 220 85" fill="none" stroke="var(--accent)" strokeWidth="2" markerEnd="url(#arrow)" />
 
                 {/* Box 2 */}
-                <rect x="230" y="50" width="160" height="70" rx="8" fill="#ffffff" stroke="#005c53" strokeWidth="1.5" />
+                <rect x="230" y="50" width="160" height="70" rx="8" fill="var(--bg-raised)" stroke="var(--accent)" strokeWidth="1.5" />
                 <text x="310" y="80" textAnchor="middle" fill="#21313a" fontSize="12" fontWeight="700">2. Claim Extraction</text>
-                <text x="310" y="98" textAnchor="middle" fill="#64716d" fontSize="10">Identifies Quotes</text>
+                <text x="310" y="98" textAnchor="middle" fill="var(--ink-tertiary)" fontSize="10">Identifies Quotes</text>
 
-                <path d="M 390 85 L 430 85" fill="none" stroke="#005c53" strokeWidth="2" markerEnd="url(#arrow)" />
+                <path d="M 390 85 L 430 85" fill="none" stroke="var(--accent)" strokeWidth="2" markerEnd="url(#arrow)" />
 
                 {/* Box 3 */}
-                <rect x="440" y="50" width="160" height="70" rx="8" fill="#ffffff" stroke="#005c53" strokeWidth="1.5" />
+                <rect x="440" y="50" width="160" height="70" rx="8" fill="var(--bg-raised)" stroke="var(--accent)" strokeWidth="1.5" />
                 <text x="520" y="80" textAnchor="middle" fill="#21313a" fontSize="12" fontWeight="700">3. Verification Gate</text>
-                <text x="520" y="98" textAnchor="middle" fill="#64716d" fontSize="10">Check in Source Corpus</text>
+                <text x="520" y="98" textAnchor="middle" fill="var(--ink-tertiary)" fontSize="10">Check in Source Corpus</text>
 
-                <path d="M 600 85 L 640 85" fill="none" stroke="#005c53" strokeWidth="2" markerEnd="url(#arrow)" />
+                <path d="M 600 85 L 640 85" fill="none" stroke="var(--accent)" strokeWidth="2" markerEnd="url(#arrow)" />
 
                 {/* Box 4 */}
-                <rect x="650" y="50" width="130" height="70" rx="8" fill="#e8f8f5" stroke="#2ecc71" strokeWidth="1.5" />
-                <text x="715" y="80" textAnchor="middle" fill="#27ae60" fontSize="12" fontWeight="700">4. Final Answer</text>
-                <text x="715" y="98" textAnchor="middle" fill="#64716d" fontSize="10">Delivered (200 OK)</text>
+                <rect x="650" y="50" width="130" height="70" rx="8" fill="var(--ok-bg)" stroke="var(--ok)" strokeWidth="1.5" />
+                <text x="715" y="80" textAnchor="middle" fill="var(--ok)" fontSize="12" fontWeight="700">4. Final Answer</text>
+                <text x="715" y="98" textAnchor="middle" fill="var(--ink-tertiary)" fontSize="10">Delivered (200 OK)</text>
               </svg>
             </div>
 
@@ -610,23 +574,23 @@ ORDER BY score ASC LIMIT :limit;`}
 
             <div className="math-block">
               <svg viewBox="0 0 700 200" width="100%" height="auto">
-                <rect width="700" height="200" rx="8" fill="#f8faf9" stroke="rgba(134,148,144,0.2)" />
+                <rect width="700" height="200" rx="8" fill="var(--bg-sunken)" stroke="rgba(134,148,144,0.2)" />
                 <text x="350" y="25" textAnchor="middle" fill="#21313a" fontSize="13" fontWeight="700">Scaling Curve: Retrieval Time vs. Document Count</text>
 
                 {/* Axes */}
-                <line x1="50" y1="160" x2="650" y2="160" stroke="#64716d" strokeWidth="1.5" />
-                <line x1="50" y1="40" x2="50" y2="160" stroke="#64716d" strokeWidth="1.5" />
-                <text x="350" y="185" textAnchor="middle" fill="#64716d" fontSize="10">Corpus size (number of text chunks)</text>
-                <text x="30" y="100" textAnchor="middle" fill="#64716d" fontSize="10" transform="rotate(-90 30 100)">Latency (ms)</text>
+                <line x1="50" y1="160" x2="650" y2="160" stroke="var(--ink-tertiary)" strokeWidth="1.5" />
+                <line x1="50" y1="40" x2="50" y2="160" stroke="var(--ink-tertiary)" strokeWidth="1.5" />
+                <text x="350" y="185" textAnchor="middle" fill="var(--ink-tertiary)" fontSize="10">Corpus size (number of text chunks)</text>
+                <text x="30" y="100" textAnchor="middle" fill="var(--ink-tertiary)" fontSize="10" transform="rotate(-90 30 100)">Latency (ms)</text>
 
                 {/* Curves */}
                 {/* Cloud Curve (Linear rising) */}
-                <path d="M 50 120 L 200 90 L 350 70 L 500 65 L 650 60" fill="none" stroke="#e67e22" strokeWidth="2.5" />
-                <text x="600" y="50" fill="#e67e22" fontSize="9" fontWeight="700">Cloud Vector Search (1,660ms)</text>
+                <path d="M 50 120 L 200 90 L 350 70 L 500 65 L 650 60" fill="none" stroke="var(--warn)" strokeWidth="2.5" />
+                <text x="600" y="50" fill="var(--warn)" fontSize="9" fontWeight="700">Cloud Vector Search (1,660ms)</text>
 
                 {/* SQLite FTS5 (Flat line near bottom) */}
-                <path d="M 50 156 L 650 156" fill="none" stroke="#005c53" strokeWidth="2.5" />
-                <text x="600" y="145" fill="#005c53" fontSize="9" fontWeight="700">AncreMed FTS5 (8ms)</text>
+                <path d="M 50 156 L 650 156" fill="none" stroke="var(--accent)" strokeWidth="2.5" />
+                <text x="600" y="145" fill="var(--accent)" fontSize="9" fontWeight="700">AncreMed FTS5 (8ms)</text>
               </svg>
             </div>
 
@@ -688,151 +652,29 @@ ORDER BY score ASC LIMIT :limit;`}
         </article>
       </div>
 
+      <SiteFooter />
+
       {/* Styles for Academic Paper Layout */}
       <style jsx global>{`
         .academic-paper-theme {
-          background: #fdfdfd;
-          color: #111111;
-          font-family: "Georgia", "Times New Roman", Times, serif;
+          background: var(--bg);
+          color: var(--ink);
+          font-family: var(--font-serif);
           line-height: 1.7;
-          overflow-y: auto;
           min-height: 100vh;
-        }
-
-        .app-global-header {
-          position: sticky;
-          top: 0;
-          left: 0;
-          right: 0;
-          height: 64px;
-          border-bottom: 1px solid rgba(134, 148, 144, 0.16);
-          background: rgba(251, 252, 251, 0.92);
-          backdrop-filter: blur(16px);
-          z-index: 100;
-        }
-
-        .header-container {
-          height: 100%;
           display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0 24px;
-          position: relative;
-        }
-
-        .logo-brand {
-          font-family: ui-sans-serif, system-ui, sans-serif;
-          font-size: 20px;
-          font-weight: 760;
-          color: #005c53;
-          text-decoration: none;
-          letter-spacing: -0.015em;
-        }
-
-        .mobile-menu-toggle {
-          display: none;
-          background: transparent;
-          border: 0;
-          color: #005c53;
-          cursor: pointer;
-          padding: 6px;
-          border-radius: 8px;
-          align-items: center;
-          justify-content: center;
-          transition: background 160ms ease;
-        }
-
-        .mobile-menu-toggle:hover {
-          background: rgba(0, 92, 83, 0.08);
-        }
-
-        .header-nav-menu {
-          display: flex;
-          align-items: center;
-          gap: 24px;
-        }
-
-        .nav-menu-link {
-          font-family: ui-sans-serif, system-ui, sans-serif;
-          font-size: 13.5px;
-          font-weight: 600;
-          color: #4a5553;
-          text-decoration: none;
-          transition: color 160ms ease;
-        }
-
-        .nav-menu-link:hover {
-          color: #005c53;
-        }
-
-        .highlight-btn {
-          font-family: ui-sans-serif, system-ui, sans-serif;
-          background: #005c53;
-          color: #ffffff;
-          padding: 8px 16px;
-          border-radius: 8px;
-          box-shadow: 0 4px 12px rgba(0, 92, 83, 0.14);
-          transition: all 180ms ease;
-        }
-
-        .highlight-btn:hover {
-          background: #064c45;
-          color: #ffffff;
-          box-shadow: 0 6px 16px rgba(0, 92, 83, 0.18);
-        }
-
-        @media (max-width: 768px) {
-          .mobile-menu-toggle {
-            display: flex;
-          }
-
-          .header-nav-menu {
-            display: none;
-            flex-direction: column;
-            position: absolute;
-            top: 64px;
-            left: 0;
-            right: 0;
-            background: #ffffff;
-            border-bottom: 1px solid rgba(134, 148, 144, 0.16);
-            padding: 24px 20px;
-            gap: 12px;
-            box-shadow: 0 12px 32px rgba(25, 42, 38, 0.08);
-            z-index: 120;
-          }
-
-          .mobile-menu-active .header-nav-menu {
-            display: flex;
-          }
-
-          .nav-menu-link {
-            width: 100%;
-            text-align: center;
-            font-size: 15px;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(134, 148, 144, 0.08);
-          }
-
-          .nav-menu-link:last-child {
-            border-bottom: 0;
-          }
-
-          .highlight-btn {
-            width: 100%;
-            text-align: center;
-            margin-bottom: 8px;
-            border-bottom: 0;
-          }
+          flex-direction: column;
         }
 
         .paper-viewport {
+          flex: 1;
           max-width: 820px;
           margin: 0 auto;
           padding: 60px 24px 100px;
         }
 
         .paper-document {
-          background: #ffffff;
+          background: transparent;
           padding: 0;
         }
 
@@ -846,15 +688,15 @@ ORDER BY score ASC LIMIT :limit;`}
           font-size: 11px;
           font-weight: 700;
           letter-spacing: 0.1em;
-          color: #005c53;
+          color: var(--accent);
           margin-bottom: 16px;
         }
 
         .paper-title {
           font-size: 32px;
-          font-weight: 700;
+          font-weight: 500;
           line-height: 1.25;
-          color: #111111;
+          color: var(--ink);
           margin: 0 0 24px;
           letter-spacing: -0.01em;
         }
@@ -875,26 +717,26 @@ ORDER BY score ASC LIMIT :limit;`}
         .author-name {
           font-size: 15px;
           font-weight: 700;
-          color: #111111;
+          color: var(--ink);
         }
 
         .author-dept,
         .author-inst {
           font-family: ui-sans-serif, system-ui, sans-serif;
           font-size: 12px;
-          color: #555555;
+          color: var(--ink-tertiary);
           margin-top: 2px;
         }
 
         .divider-double {
           border: 0;
-          border-top: 3px double #ddd;
+          border-top: 3px double var(--border-strong);
           margin: 20px 0;
         }
 
         .divider-single {
           border: 0;
-          border-top: 1px solid #eee;
+          border-top: 1px solid var(--border);
           margin: 20px 0;
         }
 
@@ -911,12 +753,12 @@ ORDER BY score ASC LIMIT :limit;`}
           letter-spacing: 0.05em;
           margin: 0 0 10px;
           text-align: center;
-          color: #111111;
+          color: var(--ink);
         }
 
         .abstract-container p {
           font-size: 13.5px;
-          color: #333333;
+          color: var(--ink-secondary);
           margin: 0;
           line-height: 1.6;
         }
@@ -930,9 +772,9 @@ ORDER BY score ASC LIMIT :limit;`}
           font-family: ui-sans-serif, system-ui, sans-serif;
           font-size: 20px;
           font-weight: 750;
-          color: #111111;
+          color: var(--ink);
           margin: 36px 0 16px;
-          border-bottom: 1px solid #eee;
+          border-bottom: 1px solid var(--border);
           padding-bottom: 6px;
         }
 
@@ -940,13 +782,13 @@ ORDER BY score ASC LIMIT :limit;`}
           font-family: ui-sans-serif, system-ui, sans-serif;
           font-size: 16px;
           font-weight: 700;
-          color: #222222;
+          color: var(--ink-secondary);
           margin: 24px 0 10px;
         }
 
         .paper-section p {
           font-size: 15px;
-          color: #222222;
+          color: var(--ink-secondary);
           margin: 0 0 18px;
         }
 
@@ -959,7 +801,7 @@ ORDER BY score ASC LIMIT :limit;`}
         .paper-section li {
           font-size: 14.5px;
           margin-bottom: 8px;
-          color: #222222;
+          color: var(--ink-secondary);
         }
 
         /* Tables */
@@ -982,33 +824,33 @@ ORDER BY score ASC LIMIT :limit;`}
           font-family: "Georgia", serif;
           font-style: italic;
           font-size: 12px;
-          color: #444444;
+          color: var(--ink-tertiary);
           margin-bottom: 8px;
           caption-side: top;
           text-align: left;
         }
 
         .academic-table th {
-          border-top: 1.5px solid #111;
-          border-bottom: 1px solid #111;
+          border-top: 1.5px solid var(--border-strong);
+          border-bottom: 1px solid var(--border-strong);
           padding: 8px 10px;
           font-weight: 700;
           text-align: left;
-          color: #111111;
+          color: var(--ink);
         }
 
         .academic-table td {
-          border-bottom: 1px solid #eee;
+          border-bottom: 1px solid var(--border);
           padding: 8px 10px;
-          color: #333333;
+          color: var(--ink-secondary);
         }
 
         .academic-table tr:last-child td {
-          border-bottom: 1.5px solid #111;
+          border-bottom: 1.5px solid var(--border-strong);
         }
 
         .table-row-highlight {
-          background-color: #f7faf9;
+          background-color: var(--bg-sunken);
           font-weight: 600;
         }
 
@@ -1019,25 +861,25 @@ ORDER BY score ASC LIMIT :limit;`}
 
         .math-formula {
           font-family: "Courier New", Courier, monospace;
-          background: #f8faf9;
+          background: var(--bg-sunken);
           border: 1px solid rgba(134, 148, 144, 0.15);
           border-radius: 6px;
           padding: 12px;
           text-align: center;
           font-weight: 700;
-          color: #005c53;
+          color: var(--accent);
           margin: 12px 0;
           font-size: 14px;
         }
 
         .code-block {
           font-family: "Courier New", Courier, monospace;
-          background: #f4f5f4;
+          background: var(--bg-sunken);
           border: 1px solid rgba(0, 0, 0, 0.06);
           border-radius: 6px;
           padding: 16px;
           font-size: 12.5px;
-          color: #111111;
+          color: var(--ink);
           overflow-x: auto;
           margin: 20px 0;
           white-space: pre;
@@ -1045,8 +887,8 @@ ORDER BY score ASC LIMIT :limit;`}
         }
 
         .reformulation-example {
-          background: #fafbfa;
-          border-left: 3px solid #005c53;
+          background: var(--bg-sunken);
+          border-left: 3px solid var(--accent);
           padding: 12px 16px;
           margin-bottom: 20px;
           border-radius: 0 6px 6px 0;
@@ -1064,8 +906,8 @@ ORDER BY score ASC LIMIT :limit;`}
         /* Flowcharts */
         .flowchart-container {
           margin: 30px auto;
-          background: #ffffff;
-          border: 1px solid #eee;
+          background: var(--bg-raised);
+          border: 1px solid var(--border);
           border-radius: 12px;
           padding: 20px;
           max-width: 680px;
@@ -1073,7 +915,7 @@ ORDER BY score ASC LIMIT :limit;`}
 
         /* References styling */
         .references-section h2 {
-          border-bottom: 1.5px solid #111;
+          border-bottom: 1.5px solid var(--border-strong);
         }
 
         .reference-list {
@@ -1087,7 +929,7 @@ ORDER BY score ASC LIMIT :limit;`}
           padding-left: 24px;
           text-indent: -24px;
           line-height: 1.6;
-          color: #333333;
+          color: var(--ink-secondary);
         }
 
         @media (max-width: 768px) {

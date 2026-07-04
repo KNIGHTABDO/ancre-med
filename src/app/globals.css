@@ -1,0 +1,209 @@
+/* ============================================================
+   AncreMed design tokens & base styles
+   Warm-paper light theme. All page styles reference these.
+   ============================================================ */
+
+:root {
+  /* Surfaces */
+  --bg: #faf9f5;
+  --bg-raised: #ffffff;
+  --bg-sunken: #f4f2ec;
+  --bg-hover: #efede5;
+
+  /* Ink */
+  --ink: #1f1e1a;
+  --ink-secondary: #57534a;
+  --ink-tertiary: #8a857a;
+
+  /* Lines */
+  --border: #e4e1d7;
+  --border-strong: #cfcbbe;
+
+  /* Accent — muted clinical teal */
+  --accent: #2d5f5a;
+  --accent-hover: #234b47;
+  --accent-ink: #f7f6f1;
+  --accent-soft: #e8efed;
+
+  /* Semantic */
+  --ok: #3d7a4f;
+  --ok-bg: #eaf2ec;
+  --ok-border: #cadfd0;
+  --warn: #96690f;
+  --warn-bg: #f8f1df;
+  --warn-border: #e9dcba;
+  --error: #a13d38;
+  --error-bg: #f7ebea;
+  --error-border: #e8cfcd;
+
+  /* Type */
+  --font-sans: var(--next-font-sans, ui-sans-serif, system-ui, sans-serif);
+  --font-serif: var(--next-font-serif, Georgia, "Times New Roman", serif);
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 15px;
+  --text-lg: 17px;
+  --text-xl: 21px;
+  --text-2xl: 28px;
+  --text-3xl: 38px;
+  --text-4xl: 52px;
+
+  /* Space */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 72px;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-full: 999px;
+
+  /* Shadow (warm tinted) */
+  --shadow-sm: 0 1px 2px rgba(31, 30, 26, 0.05);
+  --shadow-md: 0 2px 8px rgba(31, 30, 26, 0.06), 0 1px 2px rgba(31, 30, 26, 0.04);
+  --shadow-lg: 0 12px 32px rgba(31, 30, 26, 0.1);
+
+  /* Motion */
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 350ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ---------- Reset ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--bg);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.6;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--accent-hover);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-tertiary);
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+button {
+  cursor: pointer;
+}
+button:disabled,
+input:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+}
+
+a {
+  color: inherit;
+}
+
+/* ---------- Keyframes ---------- */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+}
+
+@keyframes hairline-slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+.fade-up {
+  animation: fade-up var(--dur-slow) var(--ease-out) both;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

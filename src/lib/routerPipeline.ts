@@ -1,4 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
+import { withGeminiRetry } from "@/lib/geminiRetry";
+import { serviceTierConfig } from "@/lib/serviceTier";
 import { createClient } from "@libsql/client";
 
 import { SADIQ_AGENTS, agentForSilo, type CategorySilo, type RetrievedContextChunk } from "@/lib/clinicalTypes";
@@ -274,6 +276,56 @@ async function fetchApiMedicaments(query: string): Promise<RetrievedContextChunk
   }
 }
 
+const FAST_CLASSIFIER_MODEL = "gemini-3.1-flash-lite";
+
+/**
+ * Ultra-fast conversational pre-check (gemini-3.1-flash-lite, ~200ms).
+ * Runs BEFORE the deep-search planner so greetings/chit-chat never pay the
+ * multi-round retrieval cost. Falls back to "not conversational" on any error
+ * so the full pipeline stays the safety net.
+ */
+async function fastConversationalCheck(aiStudio: GoogleGenAI, prompt: string): Promise<boolean> {
+  if (looksMedical(prompt)) {
+    return false;
+  }
+  try {
+    const response = await withGeminiRetry(() => aiStudio.models.generateContent({
+      model: FAST_CLASSIFIER_MODEL,
+      contents: prompt,
+      config: {
+        ...serviceTierConfig(),
+        systemInstruction: ROUTING_INSTRUCTION,
+        responseMimeType: "application/json",
+        responseSchema: routingSchema,
+        temperature: 0.0,
+      },
+    }));
+    const data = JSON.parse(response.text || "{}");
+    return data.is_conversational === true;
+  } catch (error) {
+    console.warn("Fast conversational check failed; falling through to full pipeline:", error);
+    return false;
+  }
+}
+
+function conversationalRouterBody(): Record<string, unknown> {
+  return {
+    success: true,
+    is_conversational: true,
+    topic_class: "conversationnel",
+    primary_class: "conversationnel",
+    secondary_class: null,
+    similarity_formula: "BM25 full-text match ranking",
+    feature_flags: featureFlagSnapshot(),
+    agents: SADIQ_AGENTS.map((agent) => ({
+      id: agent.id,
+      label: agent.label,
+      category_silo: agent.silo,
+    })),
+    injected_context: conversationalContext(),
+  };
+}
+
 export async function runRouterPipeline(rawBody: unknown): Promise<PipelineResult> {
   let body: RouterRequestBody;
   try {
@@ -285,6 +337,13 @@ export async function runRouterPipeline(rawBody: unknown): Promise<PipelineResul
   try {
     const apiKey = getRequiredEnv("GEMINI_API_KEY");
     const aiStudio = new GoogleGenAI({ apiKey });
+
+    // Fast path: bare greetings and chit-chat skip typo correction, deep
+    // search, and live lookups entirely.
+    if (await fastConversationalCheck(aiStudio, body.prompt)) {
+      return { status: 200, body: conversationalRouterBody() };
+    }
+
     const retrievalPrompt = isFeatureEnabled("qualityPolish")
       ? await correctMedicalTypos(libsqlClient, body.prompt)
       : body.prompt;
@@ -410,16 +469,17 @@ export async function runRouterPipeline(rawBody: unknown): Promise<PipelineResul
       };
     }
 
-    const routingResponse = await aiStudio.models.generateContent({
+    const routingResponse = await withGeminiRetry(() => aiStudio.models.generateContent({
       model: "gemini-3.5-flash",
       contents: retrievalPrompt,
       config: {
+        ...serviceTierConfig(),
         systemInstruction: ROUTING_INSTRUCTION,
         responseMimeType: "application/json",
         responseSchema: routingSchema,
         temperature: 0.0,
       }
-    });
+    }));
 
     const routingData = JSON.parse(routingResponse.text || "{}");
 
