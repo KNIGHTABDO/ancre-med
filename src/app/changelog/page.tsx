@@ -15,6 +15,56 @@ export default function ChangelogPage(): JSX.Element {
           <p className="subtitle">L’évolution technique et clinique du moteur AncreMed.</p>
 
           <div className="changelog-list">
+            {/* Version 3.0.0 */}
+            <section className="changelog-item">
+              <div className="changelog-meta">
+                <span className="version-badge">v3.0.0</span>
+                <time className="changelog-date">Juil. 6, 2026</time>
+              </div>
+              <div className="changelog-details">
+                <h2>Liquid Glass : refonte visuelle complète, mode sombre et rapport scientifique v2</h2>
+                <p>
+                  Refonte intégrale de l'interface selon le langage visuel « Liquid Glass » d'iOS 26 :
+                  surfaces translucides dépolies, flou d'arrière-plan, reflets spéculaires, boutons en capsule
+                  et coins largement arrondis, sur l'ensemble des pages et composants. AncreMed gagne également
+                  un mode sombre complet et un rapport scientifique entièrement réécrit.
+                </p>
+                <ul>
+                  <li>
+                    <strong>Système de tokens verre &amp; thème double :</strong> nouvelle architecture de tokens dans
+                    <code> globals.css</code> (variables <code>--glass-*</code>, rayons plus généreux, dégradé ambiant
+                    fixe derrière tout le contenu) et un thème <strong>clair + sombre automatique</strong> via
+                    <code> prefers-color-scheme</code>, avec un point d'accroche <code>data-theme</code> pour un futur
+                    sélecteur manuel. L'accent teal a été affiné pour rester lumineux à travers le verre dans les deux thèmes.
+                  </li>
+                  <li>
+                    <strong>Recettes de verre réutilisables :</strong> utilitaires <code>.glass</code>,
+                    <code> .glass-strong</code> et <code>.glass-tint</code> (deux niveaux : verre réel avec
+                    <code> backdrop-filter</code> pour les chrome/cartes, teinte givrée sans flou pour les surfaces
+                    défilantes), avec repli <code>@supports</code> pour les navigateurs sans <code>backdrop-filter</code>.
+                  </li>
+                  <li>
+                    <strong>Console, en-têtes, sources et modales en verre :</strong> en-tête flottant en capsule, barre
+                    latérale, composeur, cartes de sources, modales et navigation mobile passent tous au verre translucide ;
+                    les couleurs de silos et de confiance transitent désormais par les tokens de thème.
+                  </li>
+                  <li>
+                    <strong>Rapport scientifique v2 (<code>/paper</code>) :</strong> document nettement plus détaillé —
+                    formalisme BM25 (pondération par colonne, IDF), boucle de recherche profonde avec trace exécutée,
+                    porte d'attribution à niveaux, banque de calculs cliniques (Cockcroft-Gault, CHA₂DS₂-VASc, qSOFA,
+                    Child-Pugh), budget coût/latence et jeu d'évaluation adverse. Nouveaux diagrammes SVG entièrement
+                    adaptés au thème (fini les couleurs figées) et <strong>mise en page mobile corrigée</strong>
+                    (texte aligné à gauche, figures et tableaux défilables, aucun débordement horizontal).
+                  </li>
+                  <li>
+                    <strong>Documentation design :</strong> ajout de <code>DESIGN.md</code> décrivant les tokens, les
+                    recettes de verre, la règle de non-imbrication du flou et le mode sombre, afin que les contributeurs
+                    et agents futurs sachent exactement comment étendre le système Liquid Glass.
+                  </li>
+                </ul>
+              </div>
+            </section>
+
             {/* Version 2.2.0 */}
             <section className="changelog-item">
               <div className="changelog-meta">
