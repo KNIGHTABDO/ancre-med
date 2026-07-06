@@ -19,6 +19,20 @@ By indexing 76,303 pre-processed medical records from the Haute Autorité de San
 - **Source Freshness Tracking:** Supersession scripts flag outdated HAS/BDPM entries so stale guidance stops being retrievable once superseded.
 - **Quality-of-Life Layer:** Typo-tolerant query correction, scoped response caching for stable question classes, and a per-answer coverage indicator in the console (`ANCREMED_V2_QUALITY_POLISH`).
 - **Premium Responsive Interface:** Modern dashboard with a collapsible desktop sidebar, a mobile overlay sidebar with unambiguous open/close controls, and mobile-native bottom navigation.
+- **Liquid Glass Design System:** An iOS 26–style translucent glass UI (frosted surfaces, backdrop blur, capsule controls) with a full **light + dark** theme that follows the system preference. All styling is token-driven `styled-jsx`. See **[`DESIGN.md`](./DESIGN.md)** before adding or restyling any UI.
+
+---
+
+## Design System
+
+AncreMed's UI follows a documented **Liquid Glass** design system. All colors, radii, blur,
+and motion are CSS variables in `src/app/globals.css`; light/dark theming is automatic via
+`prefers-color-scheme`. Reusable `.glass` / `.glass-strong` / `.glass-tint` utilities and a
+strict "no nested `backdrop-filter`" rule keep every surface consistent.
+
+**If you (or an AI agent) are building or changing any UI, read [`DESIGN.md`](./DESIGN.md) first** —
+it covers the token reference, the glass recipes, the two glass tiers, the nested-blur rule,
+theme-aware SVG diagrams, and a pre-flight checklist.
 
 ---
 
@@ -120,6 +134,7 @@ ancre-med/
 ├── migrate-to-turso.mjs            # Local-to-Turso database migration script
 ├── paper-v2.md                     # v2 architecture specification
 ├── IMPLEMENTATION_LOG.md           # Phase-by-phase implementation notes
+├── DESIGN.md                       # Liquid Glass design system (read before touching UI)
 ├── README.md
 ├── CONTRIBUTING.md
 └── LICENSE (MIT)
