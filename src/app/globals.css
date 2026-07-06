@@ -1,40 +1,82 @@
 /* ============================================================
    AncreMed design tokens & base styles
-   Warm-paper light theme. All page styles reference these.
+   iOS 26 "Liquid Glass" system — translucent surfaces over an
+   ambient color-field. Light + dark (auto via prefers-color-scheme;
+   a future manual toggle can set data-theme="light"/"dark" on <html>).
+   All page styles reference these tokens.
    ============================================================ */
 
 :root {
+  color-scheme: light;
+
   /* Surfaces */
-  --bg: #faf9f5;
+  --bg: #f7f5f0;
   --bg-raised: #ffffff;
-  --bg-sunken: #f4f2ec;
-  --bg-hover: #efede5;
+  --bg-sunken: #efece4;
+  --bg-hover: rgba(31, 30, 26, 0.06);
+
+  /* Ambient color-field the glass refracts */
+  --bg-ambient:
+    radial-gradient(1100px 750px at 12% -8%, rgba(14, 128, 116, 0.14), transparent 60%),
+    radial-gradient(950px 650px at 88% 10%, rgba(125, 190, 235, 0.12), transparent 55%),
+    radial-gradient(900px 900px at 50% 115%, rgba(214, 173, 108, 0.12), transparent 60%),
+    var(--bg);
 
   /* Ink */
-  --ink: #1f1e1a;
+  --ink: #1c1b17;
   --ink-secondary: #57534a;
   --ink-tertiary: #8a857a;
 
   /* Lines */
-  --border: #e4e1d7;
-  --border-strong: #cfcbbe;
+  --border: rgba(31, 30, 26, 0.1);
+  --border-strong: rgba(31, 30, 26, 0.2);
 
-  /* Accent — muted clinical teal */
-  --accent: #2d5f5a;
-  --accent-hover: #234b47;
-  --accent-ink: #f7f6f1;
-  --accent-soft: #e8efed;
+  /* Accent — luminous clinical teal */
+  --accent: #0e8074;
+  --accent-hover: #0a6459;
+  --accent-ink: #ffffff;
+  --accent-soft: rgba(14, 128, 116, 0.12);
 
-  /* Semantic */
-  --ok: #3d7a4f;
-  --ok-bg: #eaf2ec;
-  --ok-border: #cadfd0;
-  --warn: #96690f;
-  --warn-bg: #f8f1df;
-  --warn-border: #e9dcba;
-  --error: #a13d38;
-  --error-bg: #f7ebea;
-  --error-border: #e8cfcd;
+  /* Semantic (translucent backgrounds so they sit on glass) */
+  --ok: #2e7d47;
+  --ok-bg: rgba(61, 122, 79, 0.12);
+  --ok-border: rgba(61, 122, 79, 0.3);
+  --warn: #8f6408;
+  --warn-bg: rgba(150, 105, 15, 0.12);
+  --warn-border: rgba(150, 105, 15, 0.3);
+  --error: #b03a34;
+  --error-bg: rgba(161, 61, 56, 0.1);
+  --error-border: rgba(161, 61, 56, 0.3);
+  --error-strong: #8a332f;
+  --error-ink: #fdf7f6;
+
+  /* Scrim behind modals / mobile sidebar */
+  --scrim: rgba(31, 30, 26, 0.35);
+
+  /* Source-silo tags */
+  --tag-has-ink: #0e8074;
+  --tag-has-bg: rgba(14, 128, 116, 0.12);
+  --tag-ansm-ink: #4a5578;
+  --tag-ansm-bg: rgba(74, 85, 120, 0.12);
+  --tag-edn-ink: #2e7d47;
+  --tag-edn-bg: rgba(61, 122, 79, 0.12);
+  --tag-form-ink: #8f6408;
+  --tag-form-bg: rgba(150, 105, 15, 0.12);
+  --tag-neutral-ink: #57534a;
+  --tag-neutral-bg: rgba(31, 30, 26, 0.07);
+
+  /* Liquid glass */
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-bg-strong: rgba(255, 255, 255, 0.72);
+  --glass-bg-soft: rgba(255, 255, 255, 0.38);
+  --glass-border: rgba(31, 30, 26, 0.1);
+  --glass-highlight: rgba(255, 255, 255, 0.9);
+  --glass-shadow: 0 8px 32px rgba(31, 30, 26, 0.1), 0 1px 2px rgba(31, 30, 26, 0.05);
+  --glass-fallback: rgba(255, 255, 255, 0.92);
+  --blur-sm: 12px;
+  --blur-md: 20px;
+  --blur-lg: 32px;
+  --glass-saturate: 160%;
 
   /* Type */
   --font-sans: var(--next-font-sans, ui-sans-serif, system-ui, sans-serif);
@@ -58,16 +100,17 @@
   --space-7: 48px;
   --space-8: 72px;
 
-  /* Radius */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
+  /* Radius — iOS 26 roundness */
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
   --radius-full: 999px;
 
-  /* Shadow (warm tinted) */
+  /* Shadow */
   --shadow-sm: 0 1px 2px rgba(31, 30, 26, 0.05);
-  --shadow-md: 0 2px 8px rgba(31, 30, 26, 0.06), 0 1px 2px rgba(31, 30, 26, 0.04);
-  --shadow-lg: 0 12px 32px rgba(31, 30, 26, 0.1);
+  --shadow-md: 0 4px 16px rgba(31, 30, 26, 0.07), 0 1px 2px rgba(31, 30, 26, 0.04);
+  --shadow-lg: 0 16px 48px rgba(31, 30, 26, 0.14);
 
   /* Motion */
   --dur-fast: 120ms;
@@ -75,6 +118,76 @@
   --dur-slow: 350ms;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.3, 0.5, 1);
+}
+
+/* ---------- Dark theme (auto) ----------
+   The :not() guard lets a future manual toggle win by setting
+   data-theme="light" on <html>. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --bg: #131210;
+    --bg-raised: #1e1c19;
+    --bg-sunken: #0d0c0a;
+    --bg-hover: rgba(255, 255, 255, 0.07);
+
+    --bg-ambient:
+      radial-gradient(1100px 750px at 12% -8%, rgba(69, 214, 196, 0.13), transparent 60%),
+      radial-gradient(950px 650px at 88% 8%, rgba(99, 122, 210, 0.1), transparent 55%),
+      radial-gradient(900px 900px at 50% 115%, rgba(200, 150, 80, 0.08), transparent 60%),
+      var(--bg);
+
+    --ink: #f2f0ea;
+    --ink-secondary: #b8b3a6;
+    --ink-tertiary: #85806f;
+
+    --border: rgba(255, 255, 255, 0.1);
+    --border-strong: rgba(255, 255, 255, 0.2);
+
+    --accent: #45d6c4;
+    --accent-hover: #6ce3d4;
+    --accent-ink: #03231f;
+    --accent-soft: rgba(69, 214, 196, 0.14);
+
+    --ok: #7ed6a0;
+    --ok-bg: rgba(126, 214, 160, 0.12);
+    --ok-border: rgba(126, 214, 160, 0.3);
+    --warn: #e6b95c;
+    --warn-bg: rgba(230, 185, 92, 0.12);
+    --warn-border: rgba(230, 185, 92, 0.3);
+    --error: #f0938c;
+    --error-bg: rgba(240, 147, 140, 0.12);
+    --error-border: rgba(240, 147, 140, 0.3);
+    --error-strong: #d8615a;
+    --error-ink: #2a0f0d;
+
+    --scrim: rgba(0, 0, 0, 0.55);
+
+    --tag-has-ink: #45d6c4;
+    --tag-has-bg: rgba(69, 214, 196, 0.13);
+    --tag-ansm-ink: #a3aede;
+    --tag-ansm-bg: rgba(140, 152, 208, 0.14);
+    --tag-edn-ink: #7ed6a0;
+    --tag-edn-bg: rgba(126, 214, 160, 0.13);
+    --tag-form-ink: #e6b95c;
+    --tag-form-bg: rgba(230, 185, 92, 0.13);
+    --tag-neutral-ink: #b8b3a6;
+    --tag-neutral-bg: rgba(255, 255, 255, 0.08);
+
+    --glass-bg: rgba(30, 28, 25, 0.52);
+    --glass-bg-strong: rgba(32, 30, 26, 0.74);
+    --glass-bg-soft: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --glass-highlight: rgba(255, 255, 255, 0.16);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.3);
+    --glass-fallback: rgba(30, 28, 25, 0.96);
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35);
+    --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.55);
+  }
 }
 
 /* ---------- Reset ---------- */
@@ -97,6 +210,15 @@ body {
   font-family: var(--font-sans);
   font-size: var(--text-base);
   line-height: 1.6;
+}
+
+/* Fixed ambient layer behind everything — gives the glass something to refract */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--bg-ambient);
 }
 
 ::selection {
@@ -136,6 +258,36 @@ textarea:disabled {
 
 a {
   color: inherit;
+}
+
+/* ---------- Liquid glass surfaces ----------
+   Real glass = backdrop blur; reserve it for chrome and bounded cards.
+   Never stack backdrop-filter on a descendant of a blurred element —
+   the parent becomes the backdrop root and the child samples nothing. */
+.glass,
+.glass-strong {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--blur-md)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--blur-md)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 0 var(--glass-highlight), var(--glass-shadow);
+}
+.glass-strong {
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--blur-lg)) saturate(var(--glass-saturate));
+}
+/* Frosted tint — the glass look without blur cost; for unbounded in-flow surfaces */
+.glass-tint {
+  background: var(--glass-bg-soft);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 0 var(--glass-highlight);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass,
+  .glass-strong {
+    background: var(--glass-fallback);
+  }
 }
 
 /* ---------- Keyframes ---------- */

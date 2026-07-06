@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Inter, Newsreader } from "next/font/google";
 import StyledJsxRegistry from "./registry";
@@ -18,6 +18,13 @@ const newsreader = Newsreader({
   display: "swap",
   variable: "--next-font-serif",
 });
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f7f5f0" },
+    { media: "(prefers-color-scheme: dark)", color: "#131210" },
+  ],
+};
 
 export const metadata: Metadata = {
   title: "AncreMed — Intelligence Clinique Vérifiée",

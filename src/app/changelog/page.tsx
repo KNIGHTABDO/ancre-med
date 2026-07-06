@@ -212,7 +212,7 @@ export default function ChangelogPage(): JSX.Element {
 
       <style jsx global>{`
         .changelog-shell {
-          background: var(--bg);
+          background: transparent;
           min-height: 100vh;
           display: flex;
           flex-direction: column;
@@ -259,14 +259,19 @@ export default function ChangelogPage(): JSX.Element {
           gap: var(--space-1);
         }
         .version-badge {
+          align-self: flex-start;
           font-family: var(--font-serif);
-          font-size: var(--text-lg);
-          color: var(--ink);
-          background: transparent;
-          padding: 0;
+          font-size: var(--text-base);
+          color: var(--accent);
+          background: var(--accent-soft);
+          border: 1px solid var(--glass-border);
+          border-radius: var(--radius-full);
+          box-shadow: inset 0 1px 0 0 var(--glass-highlight);
+          padding: 2px 14px;
         }
         .version-stable {
-          color: var(--ink-tertiary);
+          color: var(--ink-secondary);
+          background: var(--glass-bg-soft);
         }
         .changelog-date {
           font-size: var(--text-xs);
@@ -300,8 +305,8 @@ export default function ChangelogPage(): JSX.Element {
           font-weight: 600;
         }
         .changelog-details code {
-          background: var(--bg-sunken);
-          border-radius: 4px;
+          background: var(--tag-neutral-bg);
+          border-radius: 6px;
           padding: 1px 5px;
           font-size: 0.9em;
         }

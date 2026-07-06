@@ -53,17 +53,29 @@ export function SiteHeader(): JSX.Element {
           position: sticky;
           top: 0;
           z-index: 100;
-          background: var(--bg);
-          border-bottom: 1px solid var(--border);
+          background: transparent;
+          padding: 10px var(--space-4) 0;
         }
         .site-header-inner {
+          position: relative;
           max-width: 1080px;
           margin: 0 auto;
-          height: 60px;
+          height: 56px;
           display: flex;
           align-items: center;
           justify-content: space-between;
           padding: 0 var(--space-5);
+          border-radius: var(--radius-full);
+          background: var(--glass-bg-strong);
+          -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(var(--glass-saturate));
+          backdrop-filter: blur(var(--blur-lg)) saturate(var(--glass-saturate));
+          border: 1px solid var(--glass-border);
+          box-shadow: inset 0 1px 0 0 var(--glass-highlight), var(--glass-shadow);
+        }
+        @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+          .site-header-inner {
+            background: var(--glass-fallback);
+          }
         }
         .site-nav {
           display: flex;
@@ -84,14 +96,28 @@ export function SiteHeader(): JSX.Element {
           font-size: var(--text-sm);
           font-weight: 500;
           color: var(--accent-ink);
-          background: var(--accent);
-          padding: 7px 14px;
-          border-radius: var(--radius-md);
+          background: linear-gradient(
+            180deg,
+            color-mix(in srgb, var(--accent) 85%, white) 0%,
+            var(--accent) 100%
+          );
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.35),
+            0 4px 14px color-mix(in srgb, var(--accent) 35%, transparent);
+          padding: 8px 16px;
+          border-radius: var(--radius-full);
           text-decoration: none;
-          transition: background var(--dur-fast) var(--ease-in-out);
+          transition:
+            background var(--dur-fast) var(--ease-in-out),
+            transform var(--dur-fast) var(--ease-spring);
         }
         .site-nav-cta:hover {
-          background: var(--accent-hover);
+          background: linear-gradient(
+            180deg,
+            color-mix(in srgb, var(--accent-hover) 85%, white) 0%,
+            var(--accent-hover) 100%
+          );
+          transform: translateY(-1px);
         }
         .site-nav-toggle {
           display: none;
@@ -99,7 +125,7 @@ export function SiteHeader(): JSX.Element {
           border: 0;
           color: var(--ink);
           padding: 6px;
-          border-radius: var(--radius-sm);
+          border-radius: var(--radius-full);
         }
         .site-nav-toggle:hover {
           background: var(--bg-hover);
@@ -112,14 +138,19 @@ export function SiteHeader(): JSX.Element {
           .site-nav {
             display: none;
             position: absolute;
-            top: 60px;
-            left: 0;
-            right: 0;
+            top: calc(100% + 8px);
+            left: var(--space-4);
+            right: var(--space-4);
             flex-direction: column;
             align-items: stretch;
             gap: 0;
-            background: var(--bg);
-            border-bottom: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            /* No backdrop-filter here: this panel is a descendant of the blurred
+               header capsule, so its own blur would sample nothing. Near-opaque
+               glass instead. */
+            background: var(--glass-fallback);
+            border: 1px solid var(--glass-border);
+            box-shadow: inset 0 1px 0 0 var(--glass-highlight), var(--glass-shadow);
             padding: var(--space-3) var(--space-5) var(--space-4);
           }
           .site-header.is-open .site-nav {

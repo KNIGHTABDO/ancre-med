@@ -109,7 +109,7 @@ export default function LandingPage(): JSX.Element {
           min-height: 100vh;
           display: flex;
           flex-direction: column;
-          background: var(--bg);
+          background: transparent;
         }
 
         /* Hero */
@@ -124,13 +124,21 @@ export default function LandingPage(): JSX.Element {
         .hero-eyebrow {
           display: inline-block;
           font-size: var(--text-sm);
-          color: var(--ink-tertiary);
+          color: var(--ink-secondary);
           text-decoration: none;
           margin-bottom: var(--space-5);
-          transition: color var(--dur-fast) var(--ease-in-out);
+          padding: 5px 16px;
+          border-radius: var(--radius-full);
+          background: var(--glass-bg-soft);
+          border: 1px solid var(--glass-border);
+          box-shadow: inset 0 1px 0 0 var(--glass-highlight);
+          transition:
+            color var(--dur-fast) var(--ease-in-out),
+            border-color var(--dur-fast) var(--ease-in-out);
         }
         .hero-eyebrow:hover {
-          color: var(--ink-secondary);
+          color: var(--ink);
+          border-color: var(--border-strong);
         }
         .hero h1 {
           font-family: var(--font-serif);
@@ -161,7 +169,7 @@ export default function LandingPage(): JSX.Element {
 
         /* Pipeline strip */
         .pipeline {
-          border-top: 1px solid var(--border);
+          border-top: 1px solid var(--glass-border);
           padding: var(--space-7) var(--space-5);
         }
         .pipeline-inner {
@@ -212,7 +220,7 @@ export default function LandingPage(): JSX.Element {
 
         /* Features */
         .features {
-          border-top: 1px solid var(--border);
+          border-top: 1px solid var(--glass-border);
           padding: var(--space-7) var(--space-5) var(--space-8);
         }
         .features-inner {
@@ -222,17 +230,21 @@ export default function LandingPage(): JSX.Element {
         .features-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
-          border: 1px solid var(--border);
-          border-radius: var(--radius-lg);
-          overflow: hidden;
-          background: var(--bg-raised);
+          gap: var(--space-4);
         }
         .feature {
           padding: var(--space-6) var(--space-5);
-          border-left: 1px solid var(--border);
+          background: var(--glass-bg);
+          -webkit-backdrop-filter: blur(var(--blur-md)) saturate(var(--glass-saturate));
+          backdrop-filter: blur(var(--blur-md)) saturate(var(--glass-saturate));
+          border: 1px solid var(--glass-border);
+          border-radius: var(--radius-lg);
+          box-shadow: inset 0 1px 0 0 var(--glass-highlight), var(--glass-shadow);
         }
-        .feature:first-child {
-          border-left: 0;
+        @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+          .feature {
+            background: var(--glass-fallback);
+          }
         }
         .feature h3 {
           font-size: var(--text-base);
@@ -257,13 +269,6 @@ export default function LandingPage(): JSX.Element {
           }
           .features-grid {
             grid-template-columns: 1fr;
-          }
-          .feature {
-            border-left: 0;
-            border-top: 1px solid var(--border);
-          }
-          .feature:first-child {
-            border-top: 0;
           }
         }
 
