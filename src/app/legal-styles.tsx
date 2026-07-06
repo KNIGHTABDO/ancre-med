@@ -10,7 +10,7 @@ export function LegalStyles(): JSX.Element {
         min-height: 100vh;
         display: flex;
         flex-direction: column;
-        background: var(--bg);
+        background: transparent;
       }
       .legal-viewport {
         flex: 1;
@@ -55,7 +55,7 @@ export function LegalStyles(): JSX.Element {
       .legal-warning {
         background: var(--warn-bg);
         border: 1px solid var(--warn-border);
-        border-radius: var(--radius-md);
+        border-radius: var(--radius-lg);
         padding: var(--space-4);
       }
       .legal-warning strong {

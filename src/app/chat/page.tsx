@@ -117,11 +117,11 @@ const PRIVACY_NOTICE =
   "Aucune donnée identifiante relative aux patients ne doit figurer dans vos questions.";
 
 const SILO_LABELS: Record<string, { label: string; color: string; bg: string }> = {
-  has_recommandations: { label: "HAS", color: "#2d5f5a", bg: "#e8efed" },
-  ansm_bdpm_vidal: { label: "ANSM / VIDAL", color: "#4a5578", bg: "#eaecf2" },
-  colles_enseignants_edn: { label: "EDN", color: "#3d7a4f", bg: "#eaf2ec" },
-  clinical_formulas: { label: "Formules", color: "#96690f", bg: "#f8f1df" },
-  wikipedia_fr: { label: "Wikipédia", color: "#57534a", bg: "#f4f2ec" },
+  has_recommandations: { label: "HAS", color: "var(--tag-has-ink)", bg: "var(--tag-has-bg)" },
+  ansm_bdpm_vidal: { label: "ANSM / VIDAL", color: "var(--tag-ansm-ink)", bg: "var(--tag-ansm-bg)" },
+  colles_enseignants_edn: { label: "EDN", color: "var(--tag-edn-ink)", bg: "var(--tag-edn-bg)" },
+  clinical_formulas: { label: "Formules", color: "var(--tag-form-ink)", bg: "var(--tag-form-bg)" },
+  wikipedia_fr: { label: "Wikipédia", color: "var(--tag-neutral-ink)", bg: "var(--tag-neutral-bg)" },
 };
 
 type ThinkingPhase = "routing" | "searching" | "direct";
@@ -158,13 +158,13 @@ function humanizeSiloName(raw: string): { label: string; color: string; bg: stri
   if (entry) return entry;
   // fallback: capitalize first letter
   const label = raw.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
-  return { label, color: "#57534a", bg: "#f4f2ec" };
+  return { label, color: "var(--tag-neutral-ink)", bg: "var(--tag-neutral-bg)" };
 }
 
 function confidenceStyle(score: number): { color: string; bg: string; border: string } {
-  if (score >= 0.95) return { color: "#3d7a4f", bg: "#eaf2ec", border: "#cadfd0" };
-  if (score >= 0.80) return { color: "#96690f", bg: "#f8f1df", border: "#e9dcba" };
-  return { color: "#a13d38", bg: "#f7ebea", border: "#e8cfcd" };
+  if (score >= 0.95) return { color: "var(--ok)", bg: "var(--ok-bg)", border: "var(--ok-border)" };
+  if (score >= 0.80) return { color: "var(--warn)", bg: "var(--warn-bg)", border: "var(--warn-border)" };
+  return { color: "var(--error)", bg: "var(--error-bg)", border: "var(--error-border)" };
 }
 
 function isInternalUrl(value: string): boolean {
@@ -1035,7 +1035,11 @@ function CoverageIndicator({ coverage }: { readonly coverage: CoveragePayload })
           <span
             key={silo}
             className="coverage-pill"
-            style={{ color: info.color, background: info.bg, borderColor: `${info.color}22` }}
+            style={{
+              color: info.color,
+              background: info.bg,
+              borderColor: `color-mix(in srgb, ${info.color} 15%, transparent)`,
+            }}
           >
             {info.label}
           </span>
@@ -1842,15 +1846,18 @@ export default function HomePage(): JSX.Element {
           height: 100dvh;
           display: flex;
           flex-direction: column;
-          background: var(--bg);
+          background: transparent;
           overflow: hidden;
         }
 
         .app-global-header {
           flex-shrink: 0;
           height: 56px;
-          border-bottom: 1px solid var(--border);
-          background: var(--bg);
+          border-bottom: 1px solid var(--glass-border);
+          background: var(--glass-bg-strong);
+          -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(var(--glass-saturate));
+          backdrop-filter: blur(var(--blur-lg)) saturate(var(--glass-saturate));
+          box-shadow: inset 0 1px 0 0 var(--glass-highlight);
           z-index: 100;
         }
         .header-container {
@@ -1884,8 +1891,11 @@ export default function HomePage(): JSX.Element {
           align-items: center;
           justify-content: space-between;
           padding: 0 var(--space-3);
-          border-bottom: 1px solid var(--border);
-          background: var(--bg);
+          border-bottom: 1px solid var(--glass-border);
+          background: var(--glass-bg-strong);
+          -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(var(--glass-saturate));
+          backdrop-filter: blur(var(--blur-lg)) saturate(var(--glass-saturate));
+          box-shadow: inset 0 1px 0 0 var(--glass-highlight);
           z-index: 90;
         }
         .menu-toggle-btn,
@@ -1923,8 +1933,10 @@ export default function HomePage(): JSX.Element {
           flex-shrink: 0;
           display: flex;
           flex-direction: column;
-          background: var(--bg);
-          border-right: 1px solid var(--border);
+          background: var(--glass-bg);
+          -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(var(--glass-saturate));
+          backdrop-filter: blur(var(--blur-lg)) saturate(var(--glass-saturate));
+          border-right: 1px solid var(--glass-border);
           transition: margin-left var(--dur-base) var(--ease-in-out);
         }
         .sidebar.collapsed {
@@ -1946,9 +1958,10 @@ export default function HomePage(): JSX.Element {
           gap: 8px;
           height: 36px;
           padding: 0 var(--space-3);
-          background: var(--bg-raised);
-          border: 1px solid var(--border);
-          border-radius: var(--radius-md);
+          background: var(--glass-bg-soft);
+          border: 1px solid var(--glass-border);
+          border-radius: var(--radius-full);
+          box-shadow: inset 0 1px 0 0 var(--glass-highlight);
           color: var(--ink);
           font-size: var(--text-sm);
           font-weight: 500;
@@ -1958,7 +1971,7 @@ export default function HomePage(): JSX.Element {
         }
         .btn-new-chat-compact:hover {
           border-color: var(--border-strong);
-          background: var(--bg-sunken);
+          background: var(--glass-bg);
         }
         .sidebar-controls {
           display: flex;
@@ -2020,9 +2033,9 @@ export default function HomePage(): JSX.Element {
           align-items: center;
           justify-content: space-between;
           gap: var(--space-2);
-          padding: 8px var(--space-2);
+          padding: 8px var(--space-3);
           border: 0;
-          border-radius: var(--radius-sm);
+          border-radius: var(--radius-md);
           background: transparent;
           color: var(--ink-secondary);
           text-align: left;
@@ -2088,9 +2101,12 @@ export default function HomePage(): JSX.Element {
           top: var(--space-3);
           left: var(--space-3);
           z-index: 20;
-          background: var(--bg-raised);
-          border: 1px solid var(--border);
-          border-radius: var(--radius-sm);
+          background: var(--glass-bg);
+          -webkit-backdrop-filter: blur(var(--blur-sm)) saturate(var(--glass-saturate));
+          backdrop-filter: blur(var(--blur-sm)) saturate(var(--glass-saturate));
+          border: 1px solid var(--glass-border);
+          border-radius: var(--radius-full);
+          box-shadow: inset 0 1px 0 0 var(--glass-highlight), var(--shadow-sm);
           color: var(--ink-tertiary);
           padding: 7px;
           display: flex;
@@ -2177,16 +2193,26 @@ export default function HomePage(): JSX.Element {
           display: flex;
           align-items: flex-end;
           gap: var(--space-2);
-          background: var(--bg-raised);
-          border: 1px solid var(--border);
-          border-radius: var(--radius-lg);
+          background: var(--glass-bg-strong);
+          -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(var(--glass-saturate));
+          backdrop-filter: blur(var(--blur-lg)) saturate(var(--glass-saturate));
+          border: 1px solid var(--glass-border);
+          border-radius: var(--radius-xl);
           padding: 10px 10px 10px var(--space-4);
-          box-shadow: var(--shadow-sm);
+          box-shadow: inset 0 1px 0 0 var(--glass-highlight), var(--glass-shadow);
           transition: border-color var(--dur-fast) var(--ease-in-out), box-shadow var(--dur-fast) var(--ease-in-out);
         }
+        @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+          .query-form {
+            background: var(--glass-fallback);
+          }
+        }
         .query-form:focus-within {
-          border-color: var(--border-strong);
-          box-shadow: var(--shadow-md);
+          border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+          box-shadow:
+            inset 0 1px 0 0 var(--glass-highlight),
+            0 0 0 3px var(--accent-soft),
+            var(--glass-shadow);
         }
         .query-input {
           flex: 1;
@@ -2209,19 +2235,36 @@ export default function HomePage(): JSX.Element {
           height: 34px;
           border: 0;
           border-radius: var(--radius-full);
-          background: var(--accent);
+          background: linear-gradient(
+            180deg,
+            color-mix(in srgb, var(--accent) 85%, white) 0%,
+            var(--accent) 100%
+          );
           color: var(--accent-ink);
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.35),
+            0 4px 14px color-mix(in srgb, var(--accent) 35%, transparent);
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: background var(--dur-fast) var(--ease-in-out);
+          transition:
+            background var(--dur-fast) var(--ease-in-out),
+            transform var(--dur-fast) var(--ease-spring);
         }
         .query-submit:hover:not(:disabled) {
-          background: var(--accent-hover);
+          background: linear-gradient(
+            180deg,
+            color-mix(in srgb, var(--accent-hover) 85%, white) 0%,
+            var(--accent-hover) 100%
+          );
+        }
+        .query-submit:active:not(:disabled) {
+          transform: scale(0.94);
         }
         .query-submit:disabled {
-          background: var(--bg-sunken);
+          background: var(--bg-hover);
           color: var(--ink-tertiary);
+          box-shadow: none;
         }
         .query-submit-loading:disabled {
           background: var(--accent-soft);
@@ -2272,8 +2315,11 @@ export default function HomePage(): JSX.Element {
         }
         .user-bubble {
           max-width: 78%;
-          background: var(--bg-sunken);
-          border-radius: var(--radius-lg);
+          /* Frosted tint, no backdrop blur: bubbles are unbounded in the scroller */
+          background: var(--accent-soft);
+          border: 1px solid var(--glass-border);
+          border-radius: var(--radius-xl);
+          box-shadow: inset 0 1px 0 0 var(--glass-highlight);
           padding: var(--space-3) var(--space-4);
           font-size: var(--text-base);
           line-height: 1.6;
@@ -2408,7 +2454,7 @@ export default function HomePage(): JSX.Element {
         .error-bubble {
           background: var(--error-bg);
           border: 1px solid var(--error-border);
-          border-radius: var(--radius-md);
+          border-radius: var(--radius-lg);
           padding: var(--space-4);
         }
         .error-title {
@@ -2440,8 +2486,8 @@ export default function HomePage(): JSX.Element {
           font-weight: 500;
           padding: 3px 9px;
           border-radius: var(--radius-full);
-          background: var(--bg-sunken);
-          border: 1px solid var(--border);
+          background: var(--tag-neutral-bg);
+          border: 1px solid var(--glass-border);
           color: var(--ink-secondary);
         }
 
@@ -2483,8 +2529,8 @@ export default function HomePage(): JSX.Element {
           font-weight: 500;
           color: var(--accent);
           background: var(--accent-soft);
-          border-radius: 4px;
-          padding: 0 5px;
+          border-radius: var(--radius-full);
+          padding: 0 7px;
           margin: 0 2px;
           vertical-align: baseline;
           white-space: nowrap;
@@ -2520,14 +2566,27 @@ export default function HomePage(): JSX.Element {
           animation: fade-up var(--dur-base) var(--ease-out) both;
         }
         .source-card {
-          background: var(--bg-raised);
-          border: 1px solid var(--border);
-          border-radius: var(--radius-md);
+          /* Real glass: bounded count, rendered only when sources are expanded.
+             Downgrade to the tint recipe if profiling shows scroll jank. */
+          background: var(--glass-bg);
+          -webkit-backdrop-filter: blur(var(--blur-md)) saturate(var(--glass-saturate));
+          backdrop-filter: blur(var(--blur-md)) saturate(var(--glass-saturate));
+          border: 1px solid var(--glass-border);
+          border-radius: var(--radius-lg);
+          box-shadow: inset 0 1px 0 0 var(--glass-highlight), var(--glass-shadow);
           padding: var(--space-4);
-          transition: border-color var(--dur-fast) var(--ease-in-out);
+          transition:
+            border-color var(--dur-fast) var(--ease-in-out),
+            transform var(--dur-fast) var(--ease-spring);
+        }
+        @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+          .source-card {
+            background: var(--glass-fallback);
+          }
         }
         .source-card:hover {
           border-color: var(--border-strong);
+          transform: translateY(-1px);
         }
         .source-card-header {
           display: flex;
@@ -2553,8 +2612,8 @@ export default function HomePage(): JSX.Element {
           font-weight: 600;
           padding: 3px 9px;
           border-radius: var(--radius-full);
-          background: var(--bg-sunken);
-          color: var(--ink-secondary);
+          background: var(--tag-neutral-bg);
+          color: var(--tag-neutral-ink);
         }
         .source-meta-row {
           margin-top: var(--space-2);
@@ -2606,8 +2665,8 @@ export default function HomePage(): JSX.Element {
           font-weight: 500;
           padding: 2px 8px;
           border-radius: var(--radius-full);
-          border: 1px solid var(--border);
-          background: var(--bg-sunken);
+          border: 1px solid var(--glass-border);
+          background: var(--tag-neutral-bg);
           color: var(--ink-secondary);
         }
         .quote-item-wrapper blockquote {
@@ -2628,9 +2687,11 @@ export default function HomePage(): JSX.Element {
           width: 36px;
           height: 36px;
           border-radius: var(--radius-full);
-          background: var(--bg-raised);
-          border: 1px solid var(--border);
-          box-shadow: var(--shadow-md);
+          background: var(--glass-bg);
+          -webkit-backdrop-filter: blur(var(--blur-sm)) saturate(var(--glass-saturate));
+          backdrop-filter: blur(var(--blur-sm)) saturate(var(--glass-saturate));
+          border: 1px solid var(--glass-border);
+          box-shadow: inset 0 1px 0 0 var(--glass-highlight), var(--shadow-md);
           color: var(--ink-secondary);
           display: flex;
           align-items: center;
@@ -2649,7 +2710,8 @@ export default function HomePage(): JSX.Element {
           left: 0;
           right: 0;
           padding: 0 var(--space-5) var(--space-3);
-          background: linear-gradient(to top, var(--bg) 72%, transparent);
+          /* No opaque fade: content scrolls under the floating glass composer */
+          background: transparent;
           pointer-events: none;
         }
         .input-wrap {
@@ -2658,10 +2720,14 @@ export default function HomePage(): JSX.Element {
           pointer-events: auto;
         }
         .privacy-base {
+          display: table;
           text-align: center;
           font-size: var(--text-xs);
           color: var(--ink-tertiary);
-          margin: var(--space-2) 0 0;
+          margin: var(--space-2) auto 0;
+          padding: 2px 12px;
+          border-radius: var(--radius-full);
+          background: var(--glass-bg-soft);
         }
 
         /* ============ Modals ============ */
@@ -2669,7 +2735,10 @@ export default function HomePage(): JSX.Element {
           position: fixed;
           inset: 0;
           z-index: 300;
-          background: rgba(31, 30, 26, 0.35);
+          background: var(--scrim);
+          /* The one blurred backdrop; the card inside must NOT blur (nesting rule) */
+          -webkit-backdrop-filter: blur(8px);
+          backdrop-filter: blur(8px);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -2689,10 +2758,10 @@ export default function HomePage(): JSX.Element {
           max-width: 480px;
           max-height: 85vh;
           overflow-y: auto;
-          background: var(--bg-raised);
-          border: 1px solid var(--border);
-          border-radius: var(--radius-lg);
-          box-shadow: var(--shadow-lg);
+          background: var(--glass-bg-strong);
+          border: 1px solid var(--glass-border);
+          border-radius: var(--radius-xl);
+          box-shadow: inset 0 1px 0 0 var(--glass-highlight), var(--shadow-lg);
           animation: fade-up var(--dur-base) var(--ease-out) both;
         }
         .modal-card-small {
@@ -2745,34 +2814,52 @@ export default function HomePage(): JSX.Element {
         .btn-modal-danger {
           height: 36px;
           padding: 0 var(--space-4);
-          border-radius: var(--radius-md);
+          border-radius: var(--radius-full);
           font-size: var(--text-sm);
           font-weight: 500;
           border: 1px solid transparent;
-          transition: background var(--dur-fast) var(--ease-in-out), border-color var(--dur-fast) var(--ease-in-out);
+          transition:
+            background var(--dur-fast) var(--ease-in-out),
+            border-color var(--dur-fast) var(--ease-in-out),
+            transform var(--dur-fast) var(--ease-spring);
+        }
+        .btn-modal-secondary:active,
+        .btn-modal-primary:active,
+        .btn-modal-danger:active {
+          transform: scale(0.97);
         }
         .btn-modal-secondary {
-          background: var(--bg-raised);
-          border-color: var(--border);
+          background: var(--glass-bg-soft);
+          border-color: var(--glass-border);
           color: var(--ink);
+          box-shadow: inset 0 1px 0 0 var(--glass-highlight);
         }
         .btn-modal-secondary:hover {
           border-color: var(--border-strong);
-          background: var(--bg-sunken);
+          background: var(--glass-bg);
         }
         .btn-modal-primary {
-          background: var(--accent);
+          background: linear-gradient(
+            180deg,
+            color-mix(in srgb, var(--accent) 85%, white) 0%,
+            var(--accent) 100%
+          );
           color: var(--accent-ink);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
         }
         .btn-modal-primary:hover {
-          background: var(--accent-hover);
+          background: linear-gradient(
+            180deg,
+            color-mix(in srgb, var(--accent-hover) 85%, white) 0%,
+            var(--accent-hover) 100%
+          );
         }
         .btn-modal-danger {
           background: var(--error);
-          color: #fdf7f6;
+          color: var(--error-ink);
         }
         .btn-modal-danger:hover {
-          background: #8a332f;
+          background: var(--error-strong);
         }
 
         .silo-info-list {
@@ -2798,8 +2885,8 @@ export default function HomePage(): JSX.Element {
           color: var(--accent);
         }
         .badge-ansm {
-          background: #eaecf2;
-          color: #4a5578;
+          background: var(--tag-ansm-bg);
+          color: var(--tag-ansm-ink);
         }
         .badge-edn {
           background: var(--ok-bg);
@@ -2822,8 +2909,11 @@ export default function HomePage(): JSX.Element {
         .mobile-bottom-nav {
           display: none;
           flex-shrink: 0;
-          border-top: 1px solid var(--border);
-          background: var(--bg);
+          border-top: 1px solid var(--glass-border);
+          background: var(--glass-bg-strong);
+          -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(var(--glass-saturate));
+          backdrop-filter: blur(var(--blur-lg)) saturate(var(--glass-saturate));
+          box-shadow: inset 0 1px 0 0 var(--glass-highlight);
           padding: 6px 0 calc(6px + env(safe-area-inset-bottom));
           z-index: 90;
         }
@@ -2866,7 +2956,8 @@ export default function HomePage(): JSX.Element {
             margin-left: 0;
             transform: translateX(-100%);
             transition: transform var(--dur-base) var(--ease-in-out);
-            border-right: 1px solid var(--border);
+            border-right: 1px solid var(--glass-border);
+            background: var(--glass-bg-strong);
           }
           .sidebar.collapsed {
             margin-left: 0;
@@ -2888,7 +2979,8 @@ export default function HomePage(): JSX.Element {
             position: fixed;
             inset: 0;
             z-index: 150;
-            background: rgba(31, 30, 26, 0.35);
+            /* Plain scrim — the sliding sidebar itself does the blurring */
+            background: var(--scrim);
           }
           .idle-content h1 {
             font-size: var(--text-2xl);

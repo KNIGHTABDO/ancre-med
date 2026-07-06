@@ -16,8 +16,8 @@ export function SiteFooter(): JSX.Element {
       </div>
       <style jsx global>{`
         .site-footer {
-          border-top: 1px solid var(--border);
-          background: var(--bg);
+          border-top: 1px solid var(--glass-border);
+          background: transparent;
           padding: var(--space-5);
         }
         .site-footer-inner {

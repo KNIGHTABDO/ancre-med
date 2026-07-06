@@ -657,7 +657,7 @@ ORDER BY score ASC LIMIT :limit;`}
       {/* Styles for Academic Paper Layout */}
       <style jsx global>{`
         .academic-paper-theme {
-          background: var(--bg);
+          background: transparent;
           color: var(--ink);
           font-family: var(--font-serif);
           line-height: 1.7;
@@ -674,8 +674,12 @@ ORDER BY score ASC LIMIT :limit;`}
         }
 
         .paper-document {
-          background: transparent;
-          padding: 0;
+          /* Frosted sheet — tint only, no backdrop blur (surface is thousands of px tall) */
+          background: color-mix(in srgb, var(--bg-raised) 62%, transparent);
+          border: 1px solid var(--glass-border);
+          border-radius: var(--radius-xl);
+          box-shadow: inset 0 1px 0 0 var(--glass-highlight), var(--glass-shadow);
+          padding: 48px 56px;
         }
 
         .paper-doc-header {
@@ -862,8 +866,8 @@ ORDER BY score ASC LIMIT :limit;`}
         .math-formula {
           font-family: "Courier New", Courier, monospace;
           background: var(--bg-sunken);
-          border: 1px solid rgba(134, 148, 144, 0.15);
-          border-radius: 6px;
+          border: 1px solid var(--glass-border);
+          border-radius: var(--radius-sm);
           padding: 12px;
           text-align: center;
           font-weight: 700;
@@ -875,8 +879,8 @@ ORDER BY score ASC LIMIT :limit;`}
         .code-block {
           font-family: "Courier New", Courier, monospace;
           background: var(--bg-sunken);
-          border: 1px solid rgba(0, 0, 0, 0.06);
-          border-radius: 6px;
+          border: 1px solid var(--glass-border);
+          border-radius: var(--radius-sm);
           padding: 16px;
           font-size: 12.5px;
           color: var(--ink);
@@ -903,12 +907,14 @@ ORDER BY score ASC LIMIT :limit;`}
           margin-bottom: 0;
         }
 
-        /* Flowcharts */
+        /* Flowcharts — the inline SVGs carry hardcoded light-theme fills/strokes,
+           so the container stays a light "figure plate" in both themes (like a
+           printed figure). Re-pointing every SVG fill to tokens is a follow-up. */
         .flowchart-container {
           margin: 30px auto;
-          background: var(--bg-raised);
-          border: 1px solid var(--border);
-          border-radius: 12px;
+          background: #fdfcf9;
+          border: 1px solid var(--glass-border);
+          border-radius: var(--radius-lg);
           padding: 20px;
           max-width: 680px;
         }
@@ -935,6 +941,9 @@ ORDER BY score ASC LIMIT :limit;`}
         @media (max-width: 768px) {
           .paper-viewport {
             padding: 30px 16px;
+          }
+          .paper-document {
+            padding: 28px 20px;
           }
           .paper-title {
             font-size: 24px;
