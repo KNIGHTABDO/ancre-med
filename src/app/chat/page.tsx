@@ -4,6 +4,8 @@ import type { FormEvent, ReactNode, ChangeEvent, KeyboardEvent } from "react";
 import { useMemo, useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { Logo, LogoMark } from "../../components/Logo";
+import { LangToggle } from "../../components/LangToggle";
+import { useLang, type Lang } from "../../lib/i18n";
 
 
 
@@ -113,8 +115,143 @@ interface CoveragePayload {
   readonly distinct_sources: number;
 }
 
-const PRIVACY_NOTICE =
-  "Aucune donnée identifiante relative aux patients ne doit figurer dans vos questions.";
+const PRIVACY_NOTICE: Record<Lang, string> = {
+  fr: "Aucune donnée identifiante relative aux patients ne doit figurer dans vos questions.",
+  en: "No patient-identifying data may appear in your questions.",
+};
+
+const CHAT_UI = {
+  fr: {
+    navReport: "Rapport scientifique",
+    openMenu: "Ouvrir le menu",
+    newChatAria: "Nouvelle discussion",
+    newChat: "Nouvelle discussion",
+    historyAria: "Historique des discussions",
+    collapseSidebar: "Réduire la barre latérale",
+    expandSidebar: "Développer la barre latérale",
+    closeMenu: "Fermer le menu",
+    sidebarEmpty: "Posez votre première question pour démarrer",
+    deleteChatAria: "Supprimer la discussion",
+    chatAreaAria: "Zone de discussion",
+    versionTag: "v1.0 — Clinique",
+    idleTitle: "Posez votre question clinique",
+    idleSubtitle: "Chaque réponse est fondée sur les référentiels HAS, ANSM et EDN, puis vérifiée mot à mot.",
+    examples: [
+      "Quels sont les critères diagnostiques de la BPCO ?",
+      "Dose initiale du tirzépatide chez l'adulte ?",
+      "Conduite à tenir devant un qSOFA à 2 ?",
+    ],
+    inputAria: "Question médicale",
+    inputPlaceholder: "Posez une question médicale...",
+    sendAria: "Envoyer la question",
+    responseStopped: "La réponse a été arrêtée.",
+    copyResponse: "Copier la réponse",
+    copied: "Copié !",
+    sourcesConsulted: (n: number): string => `Sources consultées (${n})`,
+    hideSources: "Masquer les sources",
+    viewSource: "Consulter la source",
+    excerpt: "Extrait",
+    pageLabel: "Page",
+    attribution: "Attribution",
+    coverageSources: (n: number): string => `${n} source${n > 1 ? "s" : ""}`,
+    coverageRounds: (n: number): string => `${n} round${n > 1 ? "s" : ""}`,
+    coverageChunks: (n: number): string => `${n} extrait${n > 1 ? "s" : ""}`,
+    scrollBottomAria: "Défiler vers le bas",
+    deleteModalTitle: "Supprimer la discussion ?",
+    closeDialogAria: "Fermer le dialogue",
+    deleteModalDesc:
+      "Cette action est irréversible. Toutes les réponses et sources associées à cette session seront définitivement effacées.",
+    cancel: "Annuler",
+    confirmDelete: "Supprimer",
+    close: "Fermer",
+    mobileNavAria: "Navigation mobile",
+    mobileNavChats: "Discussions",
+    mobileNavNew: "Nouveau",
+    mobileNavSilos: "Silos",
+    silosModalTitle: "Silos Cliniques AncreMed",
+    silosModalDesc:
+      "AncreMed interroge une base locale de 76 303 fiches réparties dans les silos réglementaires suivants :",
+    siloHasTitle: "Haute Autorité de Santé",
+    siloHasDesc: "Recommandations de bonne pratique, évaluations des médicaments (SMR) et transcriptions officielles.",
+    siloAnsmTitle: "Base de Données BDPM",
+    siloAnsmDesc: "Spécialités pharmaceutiques (dénominations, substances actives, dosages, taux de remboursement).",
+    siloEdnTitle: "Collèges des Enseignants",
+    siloEdnDesc: "Questions cliniques, cas pratiques et grilles d'évaluation pour la préparation de l'EDN.",
+    newQuestionTitle: "Nouvelle question...",
+    analysisErrorTitle: "Erreur d'analyse",
+    validationInterrupted: "La chaîne de validation clinique a interrompu la requête.",
+    dateToday: "Aujourd'hui",
+    dateYesterday: "Hier",
+    dateWeek: "Cette semaine",
+    dateOlder: "Plus ancien",
+  },
+  en: {
+    navReport: "Scientific report",
+    openMenu: "Open menu",
+    newChatAria: "New chat",
+    newChat: "New chat",
+    historyAria: "Chat history",
+    collapseSidebar: "Collapse sidebar",
+    expandSidebar: "Expand sidebar",
+    closeMenu: "Close menu",
+    sidebarEmpty: "Ask your first question to get started",
+    deleteChatAria: "Delete chat",
+    chatAreaAria: "Chat area",
+    versionTag: "v1.0 — Clinical",
+    idleTitle: "Ask your clinical question",
+    idleSubtitle: "Every answer is grounded in the HAS, ANSM and EDN references, then verified word for word.",
+    examples: [
+      "What are the diagnostic criteria for COPD?",
+      "Initial tirzepatide dose in adults?",
+      "Management of a patient with a qSOFA of 2?",
+    ],
+    inputAria: "Medical question",
+    inputPlaceholder: "Ask a medical question...",
+    sendAria: "Send the question",
+    responseStopped: "The response was stopped.",
+    copyResponse: "Copy response",
+    copied: "Copied!",
+    sourcesConsulted: (n: number): string => `Sources consulted (${n})`,
+    hideSources: "Hide sources",
+    viewSource: "View source",
+    excerpt: "Excerpt",
+    pageLabel: "Page",
+    attribution: "Attribution",
+    coverageSources: (n: number): string => `${n} source${n > 1 ? "s" : ""}`,
+    coverageRounds: (n: number): string => `${n} round${n > 1 ? "s" : ""}`,
+    coverageChunks: (n: number): string => `${n} excerpt${n > 1 ? "s" : ""}`,
+    scrollBottomAria: "Scroll to bottom",
+    deleteModalTitle: "Delete this chat?",
+    closeDialogAria: "Close dialog",
+    deleteModalDesc:
+      "This action is irreversible. All answers and sources associated with this session will be permanently erased.",
+    cancel: "Cancel",
+    confirmDelete: "Delete",
+    close: "Close",
+    mobileNavAria: "Mobile navigation",
+    mobileNavChats: "Chats",
+    mobileNavNew: "New",
+    mobileNavSilos: "Silos",
+    silosModalTitle: "AncreMed Clinical Silos",
+    silosModalDesc:
+      "AncreMed queries a local base of 76,303 sheets distributed across the following regulatory silos:",
+    siloHasTitle: "Haute Autorité de Santé",
+    siloHasDesc: "Best-practice guidelines, drug evaluations (SMR) and official transcriptions.",
+    siloAnsmTitle: "BDPM Drug Database",
+    siloAnsmDesc: "Pharmaceutical specialties (names, active substances, dosages, reimbursement rates).",
+    siloEdnTitle: "Collèges des Enseignants",
+    siloEdnDesc: "Clinical questions, practical cases and evaluation grids for EDN preparation.",
+    newQuestionTitle: "New question...",
+    analysisErrorTitle: "Analysis error",
+    validationInterrupted: "The clinical validation chain interrupted this request.",
+    dateToday: "Today",
+    dateYesterday: "Yesterday",
+    dateWeek: "This week",
+    dateOlder: "Older",
+  },
+} as const;
+
+type ChatUi = (typeof CHAT_UI)[Lang];
 
 const SILO_LABELS: Record<string, { label: string; color: string; bg: string }> = {
   has_recommandations: { label: "HAS", color: "var(--tag-has-ink)", bg: "var(--tag-has-bg)" },
@@ -126,24 +263,38 @@ const SILO_LABELS: Record<string, { label: string; color: string; bg: string }> 
 
 type ThinkingPhase = "routing" | "searching" | "direct";
 
-const THINKING_WORDS: Record<ThinkingPhase, readonly string[]> = {
-  routing: ["Réflexion…", "Analyse de la question…"],
-  searching: [
-    "Exploration des référentiels…",
-    "Lecture des fiches HAS…",
-    "Croisement des sources ANSM…",
-    "Parcours des collèges EDN…",
-    "Vérification mot à mot…",
-    "Rédaction clinique…",
-  ],
-  direct: ["Rédaction…"],
+const THINKING_WORDS: Record<Lang, Record<ThinkingPhase, readonly string[]>> = {
+  fr: {
+    routing: ["Réflexion…", "Analyse de la question…"],
+    searching: [
+      "Exploration des référentiels…",
+      "Lecture des fiches HAS…",
+      "Croisement des sources ANSM…",
+      "Parcours des collèges EDN…",
+      "Vérification mot à mot…",
+      "Rédaction clinique…",
+    ],
+    direct: ["Rédaction…"],
+  },
+  en: {
+    routing: ["Thinking…", "Analyzing the question…"],
+    searching: [
+      "Exploring the reference bases…",
+      "Reading HAS guidelines…",
+      "Cross-checking ANSM sources…",
+      "Scanning EDN course books…",
+      "Verifying word for word…",
+      "Drafting the clinical answer…",
+    ],
+    direct: ["Drafting…"],
+  },
 };
 
-function formatFrenchDate(isoDate: string): string {
+function formatLocalizedDate(isoDate: string, lang: Lang): string {
   try {
     const date = new Date(isoDate);
     if (isNaN(date.getTime())) return isoDate;
-    return date.toLocaleDateString("fr-FR", {
+    return date.toLocaleDateString(lang === "fr" ? "fr-FR" : "en-GB", {
       day: "numeric",
       month: "long",
       year: "numeric",
@@ -176,7 +327,7 @@ interface ChatDateGroup {
   readonly chats: readonly Chat[];
 }
 
-function groupChatsByDate(chats: readonly Chat[]): readonly ChatDateGroup[] {
+function groupChatsByDate(chats: readonly Chat[], t: ChatUi): readonly ChatDateGroup[] {
   const oneDay = 86_400_000;
   const todayStart = new Date().setHours(0, 0, 0, 0);
   const yesterdayStart = todayStart - oneDay;
@@ -194,10 +345,10 @@ function groupChatsByDate(chats: readonly Chat[]): readonly ChatDateGroup[] {
   }
 
   const result: ChatDateGroup[] = [];
-  if (groups.today.length > 0) result.push({ label: "Aujourd'hui", chats: groups.today });
-  if (groups.yesterday.length > 0) result.push({ label: "Hier", chats: groups.yesterday });
-  if (groups.week.length > 0) result.push({ label: "Cette semaine", chats: groups.week });
-  if (groups.older.length > 0) result.push({ label: "Plus ancien", chats: groups.older });
+  if (groups.today.length > 0) result.push({ label: t.dateToday, chats: groups.today });
+  if (groups.yesterday.length > 0) result.push({ label: t.dateYesterday, chats: groups.yesterday });
+  if (groups.week.length > 0) result.push({ label: t.dateWeek, chats: groups.week });
+  if (groups.older.length > 0) result.push({ label: t.dateOlder, chats: groups.older });
   return result;
 }
 
@@ -841,6 +992,8 @@ function QueryForm({
   onSubmit,
 }: QueryFormProps): JSX.Element {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const { lang } = useLang();
+  const t = CHAT_UI[lang];
 
   function handleSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
@@ -863,12 +1016,12 @@ function QueryForm({
 
   return (
     <form
-      aria-label="Question médicale"
+      aria-label={t.inputAria}
       className={compact ? "query-form query-form-compact" : "query-form"}
       onSubmit={handleSubmit}
     >
       <label className="sr-only" htmlFor={compact ? "medical-query-compact" : "medical-query"}>
-        Question médicale
+        {t.inputAria}
       </label>
       <textarea
         ref={textareaRef}
@@ -878,13 +1031,13 @@ function QueryForm({
         id={compact ? "medical-query-compact" : "medical-query"}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
-        placeholder="Posez une question médicale..."
+        placeholder={t.inputPlaceholder}
         rows={1}
         spellCheck={true}
         value={value}
       />
       <button
-        aria-label="Envoyer la question"
+        aria-label={t.sendAria}
         className={`query-submit ${disabled && value.trim().length > 0 ? "query-submit-loading" : ""}`}
         disabled={disabled || value.trim().length === 0}
         type="submit"
@@ -1023,11 +1176,13 @@ function getGroupedReferences(
 }
 
 function CoverageIndicator({ coverage }: { readonly coverage: CoveragePayload }): JSX.Element {
+  const { lang } = useLang();
+  const t = CHAT_UI[lang];
   return (
     <div className="coverage-indicator">
       <span className="coverage-pill">
         <svg fill="none" height="12" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" width="12"><path d="M9 12l2 2 4-4" /></svg>
-        {coverage.distinct_sources} source{coverage.distinct_sources > 1 ? "s" : ""}
+        {t.coverageSources(coverage.distinct_sources)}
       </span>
       {coverage.silos_touched.map((silo) => {
         const info = humanizeSiloName(silo);
@@ -1046,16 +1201,18 @@ function CoverageIndicator({ coverage }: { readonly coverage: CoveragePayload })
         );
       })}
       <span className="coverage-pill">
-        {coverage.rounds_used} round{coverage.rounds_used > 1 ? "s" : ""}
+        {t.coverageRounds(coverage.rounds_used)}
       </span>
       <span className="coverage-pill">
-        {coverage.total_chunks} extrait{coverage.total_chunks > 1 ? "s" : ""}
+        {t.coverageChunks(coverage.total_chunks)}
       </span>
     </div>
   );
 }
 
 export default function HomePage(): JSX.Element {
+  const { lang } = useLang();
+  const t = CHAT_UI[lang];
   const [inputValue, setInputValue] = useState<string>("");
   const [chats, setChats] = useState<readonly Chat[]>([]);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
@@ -1084,7 +1241,7 @@ export default function HomePage(): JSX.Element {
     return chats.find((c) => c.id === activeChatId) ?? null;
   }, [chats, activeChatId]);
 
-  const chatGroups = useMemo(() => groupChatsByDate(chats), [chats]);
+  const chatGroups = useMemo(() => groupChatsByDate(chats, t), [chats, t]);
 
   const isProcessing = activeChat?.messages.some((m) => m.processing) ?? false;
 
@@ -1130,7 +1287,7 @@ export default function HomePage(): JSX.Element {
       const newId = `chat-${Date.now()}`;
       const newChat: Chat = {
         id: newId,
-        title: "Nouvelle question...",
+        title: t.newQuestionTitle,
         createdAt: Date.now(),
         messages: [userMsg, assistantMsg],
       };
@@ -1228,7 +1385,7 @@ export default function HomePage(): JSX.Element {
         error:
           error instanceof Error
             ? error.message
-            : "La chaîne de validation clinique a interrompu la requête.",
+            : t.validationInterrupted,
       };
 
       setChats((prev) => {
@@ -1236,7 +1393,10 @@ export default function HomePage(): JSX.Element {
           if (c.id === currentChatId) {
             return {
               ...c,
-              title: c.title === "Nouvelle question..." ? "Erreur d'analyse" : c.title,
+              title:
+                c.title === CHAT_UI.fr.newQuestionTitle || c.title === CHAT_UI.en.newQuestionTitle
+                  ? t.analysisErrorTitle
+                  : c.title,
               messages: c.messages.map((m) =>
                 m.id === assistantMsg.id ? errorMsg : m
               ),
@@ -1254,7 +1414,7 @@ export default function HomePage(): JSX.Element {
     const newId = `chat-${Date.now()}`;
     const newChat: Chat = {
       id: newId,
-      title: "Nouvelle discussion",
+      title: t.newChat,
       createdAt: Date.now(),
       messages: [],
     };
@@ -1322,11 +1482,12 @@ export default function HomePage(): JSX.Element {
           <Logo />
           <nav className="header-nav-menu">
             <Link href="/paper" className="nav-menu-link">
-              Rapport scientifique
+              {t.navReport}
             </Link>
             <Link href="/changelog" className="nav-menu-link">
               Changelog
             </Link>
+            <LangToggle />
           </nav>
         </div>
       </header>
@@ -1334,7 +1495,7 @@ export default function HomePage(): JSX.Element {
       {/* Mobile Top Bar */}
       <header className="mobile-header">
         <button
-          aria-label="Ouvrir le menu"
+          aria-label={t.openMenu}
           className="menu-toggle-btn"
           onClick={() => setSidebarOpen(!sidebarOpen)}
         >
@@ -1344,7 +1505,7 @@ export default function HomePage(): JSX.Element {
         </button>
         <Link href="/" className="mobile-logo">AncreMed</Link>
         <button
-          aria-label="Nouvelle discussion"
+          aria-label={t.newChatAria}
           className="mobile-new-chat-btn"
           onClick={startNewChat}
         >
@@ -1356,19 +1517,19 @@ export default function HomePage(): JSX.Element {
 
       <div className="app-container">
         {/* Sidebar */}
-        <aside className={`sidebar ${sidebarOpen ? "open" : ""} ${!desktopSidebarOpen ? "collapsed" : ""}`} aria-label="Historique des discussions">
+        <aside className={`sidebar ${sidebarOpen ? "open" : ""} ${!desktopSidebarOpen ? "collapsed" : ""}`} aria-label={t.historyAria}>
           <div className="sidebar-header">
             <div className="sidebar-top-row">
               <button className="btn-new-chat-compact" onClick={startNewChat}>
                 <svg fill="none" height="14" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" width="14">
                   <path d="M12 5v14M5 12h14" />
                 </svg>
-                <span>Nouvelle discussion</span>
+                <span>{t.newChat}</span>
               </button>
 
               <div className="sidebar-controls">
                 <button
-                  aria-label="Réduire la barre latérale"
+                  aria-label={t.collapseSidebar}
                   className="btn-collapse-sidebar"
                   onClick={() => setDesktopSidebarOpen(false)}
                 >
@@ -1378,7 +1539,7 @@ export default function HomePage(): JSX.Element {
                   </svg>
                 </button>
                 <button
-                  aria-label="Fermer le menu"
+                  aria-label={t.closeMenu}
                   className="menu-close-btn"
                   onClick={() => setSidebarOpen(false)}
                 >
@@ -1396,7 +1557,7 @@ export default function HomePage(): JSX.Element {
                 <svg fill="none" height="32" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24" width="32" opacity="0.4">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                 </svg>
-                <p>Posez votre première question pour démarrer</p>
+                <p>{t.sidebarEmpty}</p>
               </div>
             ) : (
               chatGroups.map((group) => (
@@ -1414,7 +1575,7 @@ export default function HomePage(): JSX.Element {
                     >
                       <span className="chat-item-title">{c.title}</span>
                       <button
-                        aria-label="Supprimer la discussion"
+                        aria-label={t.deleteChatAria}
                         className="btn-delete-chat"
                         onClick={(e) => requestDeleteChat(c.id, e)}
                       >
@@ -1432,8 +1593,9 @@ export default function HomePage(): JSX.Element {
           <div className="sidebar-footer">
             <span className="version-tag">
               <svg fill="none" height="10" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" width="10"><circle cx="12" cy="12" r="10" /><path d="M12 8v4l2 2" /></svg>
-              v1.0 — Clinique
+              {t.versionTag}
             </span>
+            <LangToggle />
           </div>
         </aside>
 
@@ -1441,10 +1603,10 @@ export default function HomePage(): JSX.Element {
         {sidebarOpen && <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />}
 
         {/* Main Canvas */}
-        <section className={`main-viewport ${!desktopSidebarOpen ? "expanded" : ""}`} aria-label="Zone de discussion">
+        <section className={`main-viewport ${!desktopSidebarOpen ? "expanded" : ""}`} aria-label={t.chatAreaAria}>
           {!desktopSidebarOpen && (
             <button
-              aria-label="Développer la barre latérale"
+              aria-label={t.expandSidebar}
               className="floating-expand-btn"
               onClick={() => setDesktopSidebarOpen(true)}
             >
@@ -1460,10 +1622,8 @@ export default function HomePage(): JSX.Element {
                 <div className="idle-brand-mark" aria-hidden="true">
                   <LogoMark size={28} />
                 </div>
-                <h1>Posez votre question clinique</h1>
-                <p className="subtitle">
-                  Chaque réponse est fondée sur les référentiels HAS, ANSM et EDN, puis vérifiée mot à mot.
-                </p>
+                <h1>{t.idleTitle}</h1>
+                <p className="subtitle">{t.idleSubtitle}</p>
                 <div className="idle-input-box">
                   <QueryForm
                     compact={false}
@@ -1474,18 +1634,14 @@ export default function HomePage(): JSX.Element {
                   />
                 </div>
                 <div className="idle-examples">
-                  {[
-                    "Quels sont les critères diagnostiques de la BPCO ?",
-                    "Dose initiale du tirzépatide chez l'adulte ?",
-                    "Conduite à tenir devant un qSOFA à 2 ?",
-                  ].map((q) => (
+                  {t.examples.map((q) => (
                     <button key={q} className="idle-example-btn" onClick={() => setInputValue(q)}>
                       {q}
                     </button>
                   ))}
                 </div>
               </div>
-              <p className="privacy-anchor">{PRIVACY_NOTICE}</p>
+              <p className="privacy-anchor">{PRIVACY_NOTICE[lang]}</p>
             </div>
           ) : (
             <div className="chat-interface">
@@ -1504,7 +1660,7 @@ export default function HomePage(): JSX.Element {
 
                     if (msg.processing && msg.content.length === 0) {
                       const phase: ThinkingPhase = msg.phase ?? "routing";
-                      const words = THINKING_WORDS[phase];
+                      const words = THINKING_WORDS[lang][phase];
                       const word = words[loadingStepIndex % words.length];
                       return (
                         <div className="message-row assistant-row" key={msg.id}>
@@ -1557,7 +1713,7 @@ export default function HomePage(): JSX.Element {
                       return (
                         <div className="message-row assistant-row" key={msg.id}>
                           <div className="message-bubble assistant-bubble error-bubble">
-                            <p className="error-title">La réponse a été arrêtée.</p>
+                            <p className="error-title">{t.responseStopped}</p>
                             <p className="error-message">{msg.error}</p>
                           </div>
                         </div>
@@ -1581,10 +1737,10 @@ export default function HomePage(): JSX.Element {
                             <button
                               className="btn-copy-response"
                               onClick={() => copyResponse(msg.id, msg.content)}
-                              title="Copier la réponse"
+                              title={t.copyResponse}
                             >
                               {copiedMsgId === msg.id ? (
-                                <span className="copy-status-text">Copié !</span>
+                                <span className="copy-status-text">{t.copied}</span>
                               ) : (
                                 <svg fill="none" height="14" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" width="14">
                                   <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
@@ -1615,7 +1771,7 @@ export default function HomePage(): JSX.Element {
                                   )}
                                 </svg>
                                 <span>
-                                  {isExpanded ? "Masquer les sources" : `Sources consultées (${msgGroupedRefs.length})`}
+                                  {isExpanded ? t.hideSources : t.sourcesConsulted(msgGroupedRefs.length)}
                                 </span>
                               </button>
 
@@ -1627,7 +1783,7 @@ export default function HomePage(): JSX.Element {
                                         <div>
                                           <p className="authority-line">
                                             {doc.authority}
-                                            {doc.date !== null ? ` • ${formatFrenchDate(doc.date)}` : ""}
+                                            {doc.date !== null ? ` • ${formatLocalizedDate(doc.date, lang)}` : ""}
                                           </p>
                                           <h3>{doc.title}</h3>
                                         </div>
@@ -1637,7 +1793,7 @@ export default function HomePage(): JSX.Element {
                                       {!isInternalUrl(doc.linkLabel) && doc.href !== null && (
                                         <div className="source-meta-row">
                                           <a href={doc.href} rel="noreferrer" target="_blank" className="source-external-link">
-                                            <span>Consulter la source</span>
+                                            <span>{t.viewSource}</span>
                                             <svg fill="none" height="10" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" width="10">
                                               <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" />
                                             </svg>
@@ -1652,11 +1808,11 @@ export default function HomePage(): JSX.Element {
                                             <div className="quote-item-wrapper" key={quote.id}>
                                               <div className="quote-item-header">
                                                 <span className="quote-number-badge">
-                                                  Extrait {doc.quotes.length > 1 ? `${qIndex + 1}` : ""}
+                                                  {t.excerpt} {doc.quotes.length > 1 ? `${qIndex + 1}` : ""}
                                                 </span>
                                                 <div className="quote-item-meta">
                                                   {quote.page !== null && (
-                                                    <span className="quote-meta-tag quote-page-tag">Page {quote.page}</span>
+                                                    <span className="quote-meta-tag quote-page-tag">{t.pageLabel} {quote.page}</span>
                                                   )}
                                                   <span
                                                     className="quote-meta-tag quote-confidence-tag"
@@ -1666,7 +1822,7 @@ export default function HomePage(): JSX.Element {
                                                       borderColor: confStyle.border
                                                     }}
                                                   >
-                                                    Attribution {Math.round(quote.confidenceScore * 100)}%
+                                                    {t.attribution} {Math.round(quote.confidenceScore * 100)}%
                                                   </span>
                                                 </div>
                                               </div>
@@ -1695,7 +1851,7 @@ export default function HomePage(): JSX.Element {
                 <button
                   className="floating-scroll-bottom-btn"
                   onClick={scrollToBottom}
-                  aria-label="Défiler vers le bas"
+                  aria-label={t.scrollBottomAria}
                 >
                   <svg fill="none" height="18" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" width="18">
                     <path d="M19 13l-7 7-7-7M12 5v15" />
@@ -1713,7 +1869,7 @@ export default function HomePage(): JSX.Element {
                     onValueChange={setInputValue}
                     value={inputValue}
                   />
-                  <p className="privacy-base">{PRIVACY_NOTICE}</p>
+                  <p className="privacy-base">{PRIVACY_NOTICE[lang]}</p>
                 </div>
               </div>
             </div>
@@ -1726,9 +1882,9 @@ export default function HomePage(): JSX.Element {
         <div className="modal-backdrop" onClick={() => setDeleteConfirmId(null)}>
           <div className="modal-card modal-card-small" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Supprimer la discussion ?</h2>
+              <h2>{t.deleteModalTitle}</h2>
               <button
-                aria-label="Fermer le dialogue"
+                aria-label={t.closeDialogAria}
                 className="modal-close-btn"
                 onClick={() => setDeleteConfirmId(null)}
               >
@@ -1738,16 +1894,14 @@ export default function HomePage(): JSX.Element {
               </button>
             </div>
             <div className="modal-body">
-              <p className="modal-desc">
-                Cette action est irréversible. Toutes les réponses et sources associées à cette session seront définitivement effacées.
-              </p>
+              <p className="modal-desc">{t.deleteModalDesc}</p>
             </div>
             <div className="modal-footer">
               <button className="btn-modal-secondary" onClick={() => setDeleteConfirmId(null)}>
-                Annuler
+                {t.cancel}
               </button>
               <button className="btn-modal-danger" onClick={confirmDeleteChat}>
-                Supprimer
+                {t.confirmDelete}
               </button>
             </div>
           </div>
@@ -1755,7 +1909,7 @@ export default function HomePage(): JSX.Element {
       )}
 
       {/* Mobile Bottom Navigation Bar */}
-      <nav className="mobile-bottom-nav" aria-label="Navigation mobile">
+      <nav className="mobile-bottom-nav" aria-label={t.mobileNavAria}>
         <button
           className="mobile-nav-item"
           onClick={() => setSidebarOpen(true)}
@@ -1763,7 +1917,7 @@ export default function HomePage(): JSX.Element {
           <svg fill="none" height="20" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" width="20">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
-          <span>Discussions</span>
+          <span>{t.mobileNavChats}</span>
         </button>
         <button
           className="mobile-nav-item"
@@ -1772,7 +1926,7 @@ export default function HomePage(): JSX.Element {
           <svg fill="none" height="20" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" width="20">
             <path d="M12 5v14M5 12h14" />
           </svg>
-          <span>Nouveau</span>
+          <span>{t.mobileNavNew}</span>
         </button>
         <button
           className="mobile-nav-item"
@@ -1782,7 +1936,7 @@ export default function HomePage(): JSX.Element {
             <ellipse cx="12" cy="5" rx="9" ry="3" />
             <path d="M3 5v6c0 1.66 4 3 9 3s9-1.34 9-3V5M3 11v6c0 1.66 4 3 9 3s9-1.34 9-3v-6" />
           </svg>
-          <span>Silos</span>
+          <span>{t.mobileNavSilos}</span>
         </button>
       </nav>
 
@@ -1791,9 +1945,9 @@ export default function HomePage(): JSX.Element {
         <div className="modal-backdrop" onClick={() => setSilosModalOpen(false)}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Silos Cliniques AncreMed</h2>
+              <h2>{t.silosModalTitle}</h2>
               <button
-                aria-label="Fermer le dialogue"
+                aria-label={t.closeDialogAria}
                 className="modal-close-btn"
                 onClick={() => setSilosModalOpen(false)}
               >
@@ -1803,36 +1957,34 @@ export default function HomePage(): JSX.Element {
               </button>
             </div>
             <div className="modal-body">
-              <p className="modal-desc">
-                AncreMed interroge une base locale de 76 303 fiches réparties dans les silos réglementaires suivants :
-              </p>
+              <p className="modal-desc">{t.silosModalDesc}</p>
               <div className="silo-info-list">
                 <div className="silo-info-item">
                   <span className="silo-info-badge badge-has">HAS</span>
                   <div>
-                    <h4>Haute Autorité de Santé</h4>
-                    <p>Recommandations de bonne pratique, évaluations des médicaments (SMR) et transcriptions officielles.</p>
+                    <h4>{t.siloHasTitle}</h4>
+                    <p>{t.siloHasDesc}</p>
                   </div>
                 </div>
                 <div className="silo-info-item">
                   <span className="silo-info-badge badge-ansm">ANSM</span>
                   <div>
-                    <h4>Base de Données BDPM</h4>
-                    <p>Spécialités pharmaceutiques (dénominations, substances actives, dosages, taux de remboursement).</p>
+                    <h4>{t.siloAnsmTitle}</h4>
+                    <p>{t.siloAnsmDesc}</p>
                   </div>
                 </div>
                 <div className="silo-info-item">
                   <span className="silo-info-badge badge-edn">EDN</span>
                   <div>
-                    <h4>Collèges des Enseignants</h4>
-                    <p>Questions cliniques, cas pratiques et grilles d'évaluation pour la préparation de l'EDN.</p>
+                    <h4>{t.siloEdnTitle}</h4>
+                    <p>{t.siloEdnDesc}</p>
                   </div>
                 </div>
               </div>
             </div>
             <div className="modal-footer">
               <button className="btn-modal-primary" onClick={() => setSilosModalOpen(false)}>
-                Fermer
+                {t.close}
               </button>
             </div>
           </div>
@@ -2074,6 +2226,10 @@ export default function HomePage(): JSX.Element {
           color: var(--error);
         }
         .sidebar-footer {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: var(--space-2);
           padding: var(--space-3) var(--space-4);
           border-top: 1px solid var(--border);
         }

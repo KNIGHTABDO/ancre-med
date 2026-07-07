@@ -5,46 +5,56 @@ import type { JSX } from "react";
 import { SiteHeader } from "../components/SiteHeader";
 import { SiteFooter } from "../components/SiteFooter";
 import { Button } from "../components/Button";
+import { useLang, tr, type Lang } from "../lib/i18n";
 
-const PIPELINE_STEPS: ReadonlyArray<{ num: string; title: string; desc: string }> = [
-  {
-    num: "01",
-    title: "Question",
-    desc: "Vous posez une question clinique, comme à un confrère.",
-  },
-  {
-    num: "02",
-    title: "Recherche",
-    desc: "76 303 fiches HAS, ANSM et EDN interrogées localement.",
-  },
-  {
-    num: "03",
-    title: "Rédaction",
-    desc: "Une réponse structurée, rédigée à partir des seuls extraits retrouvés.",
-  },
-  {
-    num: "04",
-    title: "Vérification",
-    desc: "Chaque assertion chiffrée contrôlée mot à mot contre le texte source.",
-  },
-];
+const PIPELINE_STEPS: Record<Lang, ReadonlyArray<{ num: string; title: string; desc: string }>> = {
+  fr: [
+    { num: "01", title: "Question", desc: "Vous posez une question clinique, comme à un confrère." },
+    { num: "02", title: "Recherche", desc: "76 303 fiches HAS, ANSM et EDN interrogées localement." },
+    { num: "03", title: "Rédaction", desc: "Une réponse structurée, rédigée à partir des seuls extraits retrouvés." },
+    { num: "04", title: "Vérification", desc: "Chaque assertion chiffrée contrôlée mot à mot contre le texte source." },
+  ],
+  en: [
+    { num: "01", title: "Question", desc: "You ask a clinical question, as you would a colleague." },
+    { num: "02", title: "Search", desc: "76,303 HAS, ANSM and EDN reference sheets queried locally." },
+    { num: "03", title: "Drafting", desc: "A structured answer, written only from the retrieved excerpts." },
+    { num: "04", title: "Verification", desc: "Every numeric assertion checked word for word against the source text." },
+  ],
+};
 
-const FEATURES: ReadonlyArray<{ title: string; desc: string }> = [
-  {
-    title: "Index médicaux locaux",
-    desc: "Recherche plein texte instantanée dans plus de 76 000 fiches de référence. Aucune latence cloud pour la recherche documentaire.",
-  },
-  {
-    title: "Reformulation sémantique",
-    desc: "Le routeur reformule votre question en mots-clés optimisés — traduction des sigles, synonymes cliniques — pour maximiser le rappel.",
-  },
-  {
-    title: "Double valve clinique",
-    desc: "Chaque dosage, seuil ou critère diagnostique est vérifié contre le texte original. En cas de dérive factuelle, la réponse est bloquée.",
-  },
-];
+const FEATURES: Record<Lang, ReadonlyArray<{ title: string; desc: string }>> = {
+  fr: [
+    {
+      title: "Index médicaux locaux",
+      desc: "Recherche plein texte instantanée dans plus de 76 000 fiches de référence. Aucune latence cloud pour la recherche documentaire.",
+    },
+    {
+      title: "Reformulation sémantique",
+      desc: "Le routeur reformule votre question en mots-clés optimisés — traduction des sigles, synonymes cliniques — pour maximiser le rappel.",
+    },
+    {
+      title: "Double valve clinique",
+      desc: "Chaque dosage, seuil ou critère diagnostique est vérifié contre le texte original. En cas de dérive factuelle, la réponse est bloquée.",
+    },
+  ],
+  en: [
+    {
+      title: "Local medical indices",
+      desc: "Instant full-text search across more than 76,000 reference sheets. Zero cloud latency for document retrieval.",
+    },
+    {
+      title: "Semantic reformulation",
+      desc: "The router rewrites your question into optimized keywords — expanding acronyms, adding clinical synonyms — to maximize recall.",
+    },
+    {
+      title: "Dual clinical valve",
+      desc: "Every dosage, threshold or diagnostic criterion is verified against the original text. On factual drift, the answer is blocked.",
+    },
+  ],
+};
 
 export default function LandingPage(): JSX.Element {
+  const { lang } = useLang();
   return (
     <main className="landing-shell">
       <SiteHeader />
@@ -52,22 +62,32 @@ export default function LandingPage(): JSX.Element {
       <section className="hero fade-up">
         <div className="hero-inner">
           <Link href="/changelog" className="hero-eyebrow">
-            Nouveau · Propulsé par Gemini 3.5 Flash
+            {tr(lang, "Nouveau · Propulsé par Gemini 3.5 Flash", "New · Powered by Gemini 3.5 Flash")}
           </Link>
-          <h1>
-            Des réponses cliniques que
-            <br />
-            vous pouvez <em>vérifier</em>.
-          </h1>
+          {lang === "fr" ? (
+            <h1>
+              Des réponses cliniques que
+              <br />
+              vous pouvez <em>vérifier</em>.
+            </h1>
+          ) : (
+            <h1>
+              Clinical answers you
+              <br />
+              can <em>verify</em>.
+            </h1>
+          )}
           <p className="hero-desc">
-            AncreMed interroge 76 303 fiches issues des référentiels de la Haute Autorité de
-            Santé, de la base des médicaments ANSM et du Collège des Enseignants — et vérifie
-            chaque assertion mot à mot contre le texte source.
+            {tr(
+              lang,
+              "AncreMed interroge 76 303 fiches issues des référentiels de la Haute Autorité de Santé, de la base des médicaments ANSM et du Collège des Enseignants — et vérifie chaque assertion mot à mot contre le texte source.",
+              "AncreMed queries 76,303 sheets drawn from the Haute Autorité de Santé guidelines, the ANSM drug database and the Collège des Enseignants — and verifies every assertion word for word against the source text."
+            )}
           </p>
           <div className="hero-actions">
-            <Button href="/chat">Ouvrir la console</Button>
+            <Button href="/chat">{tr(lang, "Ouvrir la console", "Open the console")}</Button>
             <Button href="/paper" variant="secondary">
-              Lire le rapport scientifique
+              {tr(lang, "Lire le rapport scientifique", "Read the scientific report")}
             </Button>
           </div>
         </div>
@@ -75,9 +95,9 @@ export default function LandingPage(): JSX.Element {
 
       <section className="pipeline">
         <div className="pipeline-inner">
-          <h2>Comment une réponse est construite</h2>
+          <h2>{tr(lang, "Comment une réponse est construite", "How an answer is built")}</h2>
           <ol className="pipeline-steps">
-            {PIPELINE_STEPS.map((s) => (
+            {PIPELINE_STEPS[lang].map((s) => (
               <li key={s.num} className="pipeline-step">
                 <span className="pipeline-num">{s.num}</span>
                 <h3>{s.title}</h3>
@@ -90,9 +110,9 @@ export default function LandingPage(): JSX.Element {
 
       <section className="features">
         <div className="features-inner">
-          <h2>Conçu pour l’EDN et la pratique hospitalière</h2>
+          <h2>{tr(lang, "Conçu pour l’EDN et la pratique hospitalière", "Built for the EDN and hospital practice")}</h2>
           <div className="features-grid">
-            {FEATURES.map((f) => (
+            {FEATURES[lang].map((f) => (
               <article key={f.title} className="feature">
                 <h3>{f.title}</h3>
                 <p>{f.desc}</p>

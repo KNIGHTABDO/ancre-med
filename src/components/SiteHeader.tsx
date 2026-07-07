@@ -4,15 +4,18 @@ import { useState } from "react";
 import Link from "next/link";
 import type { JSX } from "react";
 import { Logo } from "./Logo";
-
-const NAV_LINKS: ReadonlyArray<{ href: string; label: string }> = [
-  { href: "/paper", label: "Rapport scientifique" },
-  { href: "/changelog", label: "Changelog" },
-];
+import { LangToggle } from "./LangToggle";
+import { useLang, tr } from "../lib/i18n";
 
 export function SiteHeader(): JSX.Element {
   const [open, setOpen] = useState<boolean>(false);
+  const { lang } = useLang();
   const close = (): void => setOpen(false);
+
+  const navLinks: ReadonlyArray<{ href: string; label: string }> = [
+    { href: "/paper", label: tr(lang, "Rapport scientifique", "Scientific report") },
+    { href: "/changelog", label: "Changelog" },
+  ];
 
   return (
     <header className={`site-header ${open ? "is-open" : ""}`}>
@@ -20,13 +23,14 @@ export function SiteHeader(): JSX.Element {
         <Logo />
 
         <nav className="site-nav">
-          {NAV_LINKS.map((l) => (
+          {navLinks.map((l) => (
             <Link key={l.href} href={l.href} className="site-nav-link" onClick={close}>
               {l.label}
             </Link>
           ))}
+          <LangToggle className="site-nav-lang" />
           <Link href="/chat" className="site-nav-cta" onClick={close}>
-            Ouvrir la console
+            {tr(lang, "Ouvrir la console", "Open the console")}
           </Link>
         </nav>
 
@@ -165,6 +169,10 @@ export function SiteHeader(): JSX.Element {
             margin-top: var(--space-3);
             text-align: center;
             padding: 11px 14px;
+          }
+          .site-nav-lang {
+            align-self: center;
+            margin-top: var(--space-3);
           }
         }
       `}</style>
