@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Inter, Newsreader } from "next/font/google";
 import StyledJsxRegistry from "./registry";
+import { LanguageProvider } from "../lib/i18n";
 import "./globals.css";
 
 const inter = Inter({
@@ -49,7 +50,9 @@ export default function RootLayout({ children }: RootLayoutProps): JSX.Element {
   return (
     <html lang="fr" className={`${inter.variable} ${newsreader.variable}`}>
       <body>
-        <StyledJsxRegistry>{children}</StyledJsxRegistry>
+        <StyledJsxRegistry>
+          <LanguageProvider>{children}</LanguageProvider>
+        </StyledJsxRegistry>
       </body>
     </html>
   );

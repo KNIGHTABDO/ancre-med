@@ -3,8 +3,10 @@
 import type { JSX } from "react";
 import { SiteHeader } from "../../components/SiteHeader";
 import { SiteFooter } from "../../components/SiteFooter";
+import { useLang } from "../../lib/i18n";
 
 export default function ChangelogPage(): JSX.Element {
+  const { lang } = useLang();
   return (
     <main className="changelog-shell">
       <SiteHeader />
@@ -12,8 +14,13 @@ export default function ChangelogPage(): JSX.Element {
       <div className="changelog-viewport fade-up">
         <div className="changelog-container">
           <h1>Changelog</h1>
-          <p className="subtitle">L’évolution technique et clinique du moteur AncreMed.</p>
+          <p className="subtitle">
+            {lang === "fr"
+              ? "L’évolution technique et clinique du moteur AncreMed."
+              : "The technical and clinical evolution of the AncreMed engine."}
+          </p>
 
+          {lang === "fr" ? (
           <div className="changelog-list">
             {/* Version 3.0.0 */}
             <section className="changelog-item">
@@ -255,6 +262,249 @@ export default function ChangelogPage(): JSX.Element {
               </div>
             </section>
           </div>
+          ) : (
+          <div className="changelog-list">
+            {/* Version 3.0.0 */}
+            <section className="changelog-item">
+              <div className="changelog-meta">
+                <span className="version-badge">v3.0.0</span>
+                <time className="changelog-date">Jul. 6, 2026</time>
+              </div>
+              <div className="changelog-details">
+                <h2>Liquid Glass: full visual redesign, dark mode and scientific report v2</h2>
+                <p>
+                  A complete UI overhaul following Apple&apos;s iOS 26 &quot;Liquid Glass&quot; visual language:
+                  translucent frosted surfaces, backdrop blur, specular highlights, capsule buttons and generously
+                  rounded corners, across every page and component. AncreMed also gains a full dark mode and a
+                  fully rewritten scientific report.
+                </p>
+                <ul>
+                  <li>
+                    <strong>Glass token system &amp; dual theme:</strong> a new token architecture in
+                    <code> globals.css</code> (<code>--glass-*</code> variables, more generous radii, a fixed ambient
+                    gradient behind all content) and an <strong>automatic light + dark</strong> theme via
+                    <code> prefers-color-scheme</code>, with a <code>data-theme</code> hook for a future manual toggle.
+                    The teal accent was tuned to stay luminous through the glass in both themes.
+                  </li>
+                  <li>
+                    <strong>Reusable glass recipes:</strong> <code>.glass</code>, <code>.glass-strong</code> and
+                    <code> .glass-tint</code> utilities (two tiers: real glass with <code>backdrop-filter</code> for
+                    chrome/cards, frosted tint without blur for scrolling surfaces), with an <code>@supports</code>
+                    fallback for browsers without <code>backdrop-filter</code>.
+                  </li>
+                  <li>
+                    <strong>Glass console, headers, sources and modals:</strong> a floating capsule header, sidebar,
+                    composer, source cards, modals and mobile navigation all move to translucent glass; silo and
+                    confidence colors now flow through theme tokens.
+                  </li>
+                  <li>
+                    <strong>Scientific report v2 (<code>/paper</code>):</strong> a much more detailed document —
+                    BM25 formalism (column weighting, IDF), a deep search loop with a worked trace, a tiered
+                    attribution gate, a clinical calculation bank (Cockcroft-Gault, CHA₂DS₂-VASc, qSOFA,
+                    Child-Pugh), a cost/latency budget and an adversarial evaluation set. New SVG diagrams fully
+                    theme-aware (no more hardcoded colors) and a <strong>fixed mobile layout</strong>
+                    (left-aligned text, scrollable figures and tables, no horizontal overflow).
+                  </li>
+                  <li>
+                    <strong>Design documentation:</strong> added <code>DESIGN.md</code> describing the tokens, the
+                    glass recipes, the no-nested-blur rule and dark mode, so future contributors and agents know
+                    exactly how to extend the Liquid Glass system.
+                  </li>
+                </ul>
+              </div>
+            </section>
+
+            {/* Version 2.2.0 */}
+            <section className="changelog-item">
+              <div className="changelog-meta">
+                <span className="version-badge">v2.2.0</span>
+                <time className="changelog-date">Jul. 3, 2026</time>
+              </div>
+              <div className="changelog-details">
+                <h2>Interface v2 &amp; FOUC fix: premium UI/UX overhaul and SSR integration</h2>
+                <p>
+                  This update brings a major visual overhaul and fixes initial-render issues to align the user
+                  experience with the production standards of industry leaders (OpenAI, Anthropic).
+                </p>
+                <ul>
+                  <li>
+                    <strong>SSR style integration (zero FOUC):</strong> fixed the <em>Flash of Unstyled Content</em>
+                    (FOUC) across all pages. We integrated a <code>StyledJsxRegistry</code> to collect and inject CSS
+                    during Server-Side Rendering (SSR) in the global Next.js layout, guaranteeing a perfectly styled
+                    first paint on every reload.
+                  </li>
+                  <li>
+                    <strong>Smart input console:</strong> replaced the simple input field with an auto-expanding
+                    <code> &lt;textarea&gt;</code> that adapts to text length up to 160px tall. Optimized handling of
+                    <code> Enter</code> (send) and <code>Shift+Enter</code> (new line), with automatic vertical
+                    centering on a single line.
+                  </li>
+                  <li>
+                    <strong>Compact, refined sidebar:</strong> reorganized the sidebar header. The &quot;New chat&quot;
+                    button and the collapse button now sit side by side on a single line, freeing valuable vertical
+                    space for history and refining the panel&apos;s visual balance.
+                  </li>
+                  <li>
+                    <strong>Semantic loading screen and checkpoints:</strong> a step-by-step progress indicator during
+                    generation (index search, source analysis, clinical drafting, assertion verification) paired with
+                    pulsing text skeletons for smooth visual feedback.
+                  </li>
+                  <li>
+                    <strong>Comfort and safety improvements:</strong> a confirmation dialog before deleting chats, an
+                    automatic scroll-to-bottom button, one-click copying of clinical answers, and replacement of raw
+                    database identifiers with colored source badges (HAS, ANSM / VIDAL, EDN).
+                  </li>
+                </ul>
+              </div>
+            </section>
+
+            {/* Version 2.1.0 */}
+            <section className="changelog-item">
+              <div className="changelog-meta">
+                <span className="version-badge">v2.1.0</span>
+                <time className="changelog-date">Jul. 2, 2026</time>
+              </div>
+              <div className="changelog-details">
+                <h2>Clinical valve v2: graceful degradation instead of total blocking</h2>
+                <p>
+                  The clinical-review valve used to block the entire response as soon as a single assertion was
+                  disputed, even when the question was factually simple and well established (e.g. the CHA2DS2-VASc
+                  score). It now blocks only when the response contains nothing usable for the student.
+                </p>
+                <ul>
+                  <li>
+                    <strong>Targeted, not collective, rejection:</strong> every clinical assertion is still verified
+                    word for word (exact quote) and by source entity, but only the faulty assertion is removed from
+                    the response. The rest of the text, correctly sourced, is kept and shown to the student instead of
+                    being discarded with it.
+                  </li>
+                  <li>
+                    <strong>Recalibrated independent verifier:</strong> the second verification model (Gemini
+                    Flash-Lite, a separate call) stayed deliberately &quot;skeptical by default&quot; and invalidated
+                    correctly attributed quotes over a mere rewording. Its instruction now focuses on clinical
+                    substance (right drug, right pathology, right subgroup, right number) rather than literal stylistic
+                    fidelity, while still rejecting any subject mix-up or fabricated number.
+                  </li>
+                  <li>
+                    <strong>Removed the keyword filter on narrative paragraphs:</strong> explanatory passages were no
+                    longer allowed to contain any number or word like &quot;score&quot;/&quot;threshold&quot;, which
+                    blocked otherwise-correct answers. The instruction to separate narrative from numeric assertion is
+                    now reinforced in the prompt, without a deterministic regex filter.
+                  </li>
+                  <li>
+                    <strong>Blocking reserved for real failures:</strong> the response is now rejected (422) only if,
+                    after filtering, nothing remains — no verified assertion, no honest abstention, and no usable
+                    narrative text — a genuine generation failure, not a mere verifier disagreement.
+                  </li>
+                </ul>
+              </div>
+            </section>
+
+            {/* Version 2.0.0 */}
+            <section className="changelog-item">
+              <div className="changelog-meta">
+                <span className="version-badge">v2.0.0</span>
+                <time className="changelog-date">Jul. 1, 2026</time>
+              </div>
+              <div className="changelog-details">
+                <h2>AncreMed v2: deep search, attributed spans and calculation bank</h2>
+                <p>
+                  A major overhaul of the retrieval and generation engine, rolled out in five phases (see
+                  <code> IMPLEMENTATION_LOG.md</code>).
+                </p>
+                <ul>
+                  <li>
+                    <strong>Multi-round deep search:</strong> a planner classifies the question by topic, re-runs
+                    targeted FTS5/BM25 searches per missing section, and stops as soon as coverage is reached or a
+                    bounded round count is hit.
+                  </li>
+                  <li>
+                    <strong>Attributed &quot;span&quot; responses:</strong> each response is now composed of narrative
+                    segments, sourced clinical assertions (exact quote + entity id) and explicit abstentions for
+                    sections not covered by the corpus.
+                  </li>
+                  <li>
+                    <strong>Verified clinical calculation bank:</strong> Cockcroft-Gault, CHA2DS2-VASc and its 2024
+                    ESC variant (CHA2DS2-VA), qSOFA and Child-Pugh are served from a dedicated table and prioritized
+                    for clinical calculation questions.
+                  </li>
+                  <li>
+                    <strong>Independent verifier and source freshness:</strong> a second model call checks each
+                    assertion against its source document, and outdated HAS/BDPM guidance is marked
+                    <code> superseded</code> so it is no longer cited.
+                  </li>
+                  <li>
+                    <strong>Typo tolerance, cache and coverage indicator:</strong>{" "}
+                    lightweight correction of misspelled queries, response caching for stable question classes, and a
+                    per-answer coverage indicator.
+                  </li>
+                </ul>
+              </div>
+            </section>
+
+            {/* Version 0.2.0 */}
+            <section className="changelog-item">
+              <div className="changelog-meta">
+                <span className="version-badge">v0.2.0</span>
+                <time className="changelog-date">Jun. 30, 2026</time>
+              </div>
+              <div className="changelog-details">
+                <h2>Agentic routing, reformulation &amp; UI overhaul</h2>
+                <p>
+                  This major update introduces the intelligent routing architecture and improves navigation ergonomics
+                  for mobile and wide screens.
+                </p>
+                <ul>
+                  <li>
+                    <strong>Agentic intelligent router (API Router):</strong> automatic upstream classification of
+                    messages. Conversational or courtesy queries (&quot;hello&quot;, &quot;thanks&quot;) bypass the
+                    search index to reply in under 300 ms.
+                  </li>
+                  <li>
+                    <strong>Semantic reformulation:</strong> automatic expansion of acronyms (e.g. &quot;COPD&quot;,
+                    &quot;AAG&quot;) and expansion into French keywords to increase the SQLite search recall rate.
+                  </li>
+                  <li>
+                    <strong>Collapsible sidebar (desktop):</strong> added collapse/expand buttons with minimalist SVG
+                    icons.
+                  </li>
+                  <li>
+                    <strong>Premium mobile navigation:</strong> a fixed bottom menu to jump directly to chats, start a
+                    new chat, or open the clinical silos summary.
+                  </li>
+                  <li>
+                    <strong>Scroller fix:</strong> integrated a dynamic 110px spacer to prevent the last message from
+                    overlapping the fixed input box.
+                  </li>
+                </ul>
+              </div>
+            </section>
+
+            {/* Version 0.1.0 */}
+            <section className="changelog-item">
+              <div className="changelog-meta">
+                <span className="version-badge version-stable">v0.1.0</span>
+                <time className="changelog-date">Jun. 15, 2026</time>
+              </div>
+              <div className="changelog-details">
+                <h2>Initial launch of AncreMed</h2>
+                <p>First functional version of the local-first RAG engine.</p>
+                <ul>
+                  <li>
+                    <strong>Silo ingestion:</strong> local indexing of 76,303 fragments from HAS and BDPM documents.
+                  </li>
+                  <li>
+                    <strong>FTS5 search:</strong> migration to an ultra-fast SQLite FTS5 engine (8 ms local search).
+                  </li>
+                  <li>
+                    <strong>Attribution Gate:</strong> the first version of the clinical valve, blocking factual drift
+                    by verifying the presence of exact quotes.
+                  </li>
+                </ul>
+              </div>
+            </section>
+          </div>
+          )}
         </div>
       </div>
 

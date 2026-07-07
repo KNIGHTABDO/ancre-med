@@ -1,17 +1,27 @@
+"use client";
+
 import Link from "next/link";
 import type { JSX } from "react";
+import { useLang, tr } from "../lib/i18n";
 
 export function SiteFooter(): JSX.Element {
+  const { lang } = useLang();
   return (
     <footer className="site-footer">
       <div className="site-footer-inner">
-        <p className="site-footer-brand">AncreMed © 2026 — Outil libre d’attribution clinique</p>
+        <p className="site-footer-brand">
+          {tr(
+            lang,
+            "AncreMed © 2026 — Outil libre d’attribution clinique",
+            "AncreMed © 2026 — Free clinical attribution tool"
+          )}
+        </p>
         <nav className="site-footer-links">
           <Link href="/chat">Console</Link>
-          <Link href="/paper">Recherche</Link>
+          <Link href="/paper">{tr(lang, "Recherche", "Research")}</Link>
           <Link href="/changelog">Changelog</Link>
-          <Link href="/terms">CGU</Link>
-          <Link href="/privacy">Confidentialité</Link>
+          <Link href="/terms">{tr(lang, "CGU", "Terms")}</Link>
+          <Link href="/privacy">{tr(lang, "Confidentialité", "Privacy")}</Link>
         </nav>
       </div>
       <style jsx global>{`
