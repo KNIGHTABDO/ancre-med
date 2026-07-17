@@ -10,7 +10,8 @@
     "seed:formulas": "node scripts/seed-clinical-formulas.mjs",
     "freshness:bdpm": "node scripts/refresh-bdpm.mjs",
     "freshness:has": "node scripts/check-has-supersession.mjs",
-    "vocab:build": "node scripts/build-search-vocabulary.mjs"
+    "vocab:build": "node scripts/build-search-vocabulary.mjs",
+    "assets:brand": "node scripts/generate-brand-assets.mjs"
   },
   "dependencies": {
     "@google/genai": "2.10.0",

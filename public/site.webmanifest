@@ -1,0 +1,46 @@
+{
+  "name": "AncreMed — Intelligence Clinique Vérifiée",
+  "short_name": "AncreMed",
+  "description": "Console médicale RAG haute-attribution. Interrogez 76 303 fiches HAS, ANSM et EDN avec vérification mot-à-mot des assertions cliniques.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f7f5f0",
+  "theme_color": "#0e8074",
+  "lang": "fr",
+  "dir": "ltr",
+  "categories": ["medical", "productivity", "education"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "type": "image/png",
+      "sizes": "180x180",
+      "purpose": "any"
+    }
+  ]
+}
